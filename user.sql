@@ -31,7 +31,7 @@ CREATE TABLE user (
   email varchar(50) NOT NULL,
   password char(50) NOT NULL,
   isAdmin boolean NOT NULL,
-  phone_number char(50) NOT NULL,
+  phone_number char(15) NOT NULL,
   date_of_birth date NOT NULL,
   PRIMARY KEY (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
