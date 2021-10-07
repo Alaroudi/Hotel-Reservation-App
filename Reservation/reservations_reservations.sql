@@ -29,6 +29,7 @@ CREATE TABLE `reservations` (
   `user_id` int NOT NULL,
   `check_in` date NOT NULL,
   `check_out` date NOT NULL,
+  `total_price` decimal(10,2) DEFAULT NULL,
   `reserved` tinyint(1) DEFAULT NULL,
   PRIMARY KEY (`reservation_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -52,4 +53,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2021-10-06 16:30:05
+-- Dump completed on 2021-10-06 19:01:31
