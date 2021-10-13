@@ -1,8 +1,18 @@
+import { Redirect, Route, Switch } from "react-router";
+import PageNotFound from "./components/PageNotFound";
+import SignIn from "./components/SignIn";
+import SignUp from "./components/SignUp";
+
 function App() {
   return (
-    <div>
-      <h1>Hotel Reservarion App</h1>
-    </div>
+    <>
+      <Switch>
+        <Route path="/signin" component={SignIn} />
+        <Route path="/signup" component={SignUp} />
+        <Route path="/not-found" component={PageNotFound} />
+        <Redirect to="/not-found" />
+      </Switch>
+    </>
   );
 }
 
