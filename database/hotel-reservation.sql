@@ -51,9 +51,10 @@ CREATE TABLE `hotel` (
   `city` char(25) NOT NULL,
   `state` char(2) NOT NULL,
   `zipcode` int NOT NULL,
-  `num_rooms` SMALLINT NOT NULL,
+  `number_of_rooms` INT NOT NULL,
   `phone_number` char(15) NOT NULL,
   `hotel_name` varchar(50) NOT NULL,
+  `weekend_diff_percentage` decimal(3,2),
   PRIMARY KEY (`hotel_id`)
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -67,20 +68,21 @@ INSERT INTO `hotel_reservation`.`hotel`
 `city`,
 `state`,
 `zipcode`,
-`num_rooms`,
-`phone_number`
+`number_of_rooms`,
+`phone_number`,
+`weekend_diff_percentage`
 )
  VALUES 
- ('The Magnolia All Suites','14187 Commercial Trail','Hampton','VA',23452, 20, '213-342-5433'),
- ('The Lofts at Town Centre','251 Springs Junction','Colorado Springs','CO', 54789, 60, '532-543-7970'),
- ('Park North Hotel','30 Arapahoe Terrace','Orlando','FL',75231, 100, '854-324-7653'),
- ('The Courtyard Suites','5 Spohn Circle','Arlington','TX',78532, 20, '747-231-8017'),
- ('The Regency Rooms','7 Manley Drive','Chicago','IL', 54932, 20, '876-462-1211'),
- ('Town Inn Budget Rooms','50 Lillian Crossing','Nashville','TN', 68423, 150, '210-435-3422'),
- ('The Comfy Motel Place','538 Mosinee Center','Sarasota','FL', 75765, 50, '854-899-4532'),
- ('Sun Palace Inn','3520 Ohio Trail','Visalia','CA', 97453, 50, '634-112-6543'),
- ('HomeAway Inn','68 Lawn Avenue','Atlanta','GA', 43832, 30, '774-332-9943'),
- ('Rio Inn','123 Avenue','Austin','TX', 78352, 50, '210-342-9943');
+ ('The Magnolia All Suites','14187 Commercial Trail','Hampton','VA',23452, 20, '213-342-5433', 0.25),
+ ('The Lofts at Town Centre','251 Springs Junction','Colorado Springs','CO', 54789, 60, '532-543-7970', 0.35),
+ ('Park North Hotel','30 Arapahoe Terrace','Orlando','FL',75231, 100, '854-324-7653', 0.15),
+ ('The Courtyard Suites','5 Spohn Circle','Arlington','TX',78532, 20, '747-231-8017', 0.25),
+ ('The Regency Rooms','7 Manley Drive','Chicago','IL', 54932, 20, '876-462-1211', 0.25),
+ ('Town Inn Budget Rooms','50 Lillian Crossing','Nashville','TN', 68423, 150, '210-435-3422', 0.15),
+ ('The Comfy Motel Place','538 Mosinee Center','Sarasota','FL', 75765, 50, '854-899-4532', 0.10),
+ ('Sun Palace Inn','3520 Ohio Trail','Visalia','CA', 97453, 50, '634-112-6543', 0.25),
+ ('HomeAway Inn','68 Lawn Avenue','Atlanta','GA', 43832, 30, '774-332-9943', 0.25),
+ ('Rio Inn','123 Avenue','Austin','TX', 78352, 50, '210-342-9943', 0.20);
 
 
 --
@@ -165,28 +167,57 @@ VALUES
 -- Table structure for table `room`
 --
 
-DROP TABLE IF EXISTS `room`;
+DROP TABLE IF EXISTS `hotel_room_type`;
 
-CREATE TABLE `room` (
-  `room_id` int NOT NULL AUTO_INCREMENT,
+CREATE TABLE `hotel_room_type` (
   `room_type_id` int NOT NULL,
-  `current_price` decimal(10,2) NOT NULL,
   `hotel_id` int NOT NULL,
-  PRIMARY KEY (`room_id`),
+  `room_type_count` int NOT NULL,
+  `price_per_night` decimal(10,2) NOT NULL,
+  PRIMARY KEY (`room_type_id`, `hotel_id`),
 
-  CONSTRAINT `room_hotel_id_fk` 
+  CONSTRAINT `hotel_id_fk` 
   FOREIGN KEY (`hotel_id`) 
   REFERENCES `hotel` (`hotel_id`)
   ON DELETE CASCADE 
   ON UPDATE CASCADE,
 
-  CONSTRAINT `room_room_type_id_fk`
+  CONSTRAINT `hotel_room_type_id_fk`
   FOREIGN KEY (`room_type_id`) 
   REFERENCES `room_type` (`room_type_id`)
 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-
+INSERT INTO `hotel_reservation`. `hotel_room_type` 
+(`hotel_id`, `room_type_id`, `room_type_count`,  `price_per_night`) 
+VALUES 
+(1, 1, 10, 100),
+(1, 2, 5, 150),
+(1, 3, 5, 250),
+(2, 1, 30, 105),
+(2, 2, 20, 120),
+(2, 3, 10, 190),
+(3, 1, 50, 50),
+(3, 2, 25, 75),
+(3, 3, 25, 90),
+(4, 1, 10, 100),
+(4, 2, 5, 150),
+(4, 3, 5, 250),
+(5, 1, 15, 100),
+(5, 2, 3, 150),
+(5, 3, 2, 250),
+(6, 1, 75, 25),
+(6, 2, 50, 50),
+(6, 3, 25, 60),
+(7, 1, 25, 30),
+(7, 2, 25, 50),
+(8, 1, 25, 40),
+(8, 2, 15, 60),
+(8, 3, 10, 80),
+(9, 1, 30, 50),
+(10, 1, 25, 25),
+(10, 2, 18, 55),
+(10, 3, 7, 89);
 --
 -- Table structure for table `reservations`
 --
@@ -196,6 +227,7 @@ DROP TABLE IF EXISTS `reservations`;
 CREATE TABLE `reservations` (
   `reservation_id` int NOT NULL AUTO_INCREMENT,
   `user_id` int NOT NULL,
+  `hotel_id` int NOT NULL,
   `check_in` date NOT NULL,
   `check_out` date NOT NULL,
   `total_price` decimal(10,2) DEFAULT NULL,
@@ -204,8 +236,12 @@ CREATE TABLE `reservations` (
 
   CONSTRAINT `reservations_user_id_fk`
   FOREIGN KEY (`user_id`)
-  REFERENCES `user` (`user_id`)
+  REFERENCES `user` (`user_id`),
   
+  CONSTRAINT `reservations_hotel_id_fk`
+  FOREIGN KEY (`hotel_id`)
+  REFERENCES `hotel` (`hotel_id`)
+
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
@@ -213,20 +249,20 @@ CREATE TABLE `reservations` (
 -- Table structure for table `room_reserved`
 --
 
-DROP TABLE IF EXISTS `room_reserved`;
+DROP TABLE IF EXISTS `room_type_reserved`;
 
-CREATE TABLE `room_reserved` (
+CREATE TABLE `reserved_room_type` (
+  `id` int NOT NULL AUTO_INCREMENT,
   `reservation_id` int NOT NULL,
-  `room_id` int NOT NULL,
-  PRIMARY KEY (`reservation_id`,  `room_id`),
+  `room_type_id` int NOT NULL,
+  PRIMARY KEY (`id`),
 
-  CONSTRAINT `room_reserved_reservation_id_fk` 
+  CONSTRAINT `reservation_id_fk` 
   FOREIGN KEY (`reservation_id`) 
   REFERENCES `reservations` (`reservation_id`) 
   ON DELETE CASCADE ON UPDATE CASCADE, 
 
-  CONSTRAINT `room_reserved_room_id_fk`
-  FOREIGN KEY (`room_id`)
-  REFERENCES `room` (`room_id`)
+  CONSTRAINT `reserved_room_type_id_fk`
+  FOREIGN KEY (`room_type_id`)
+  REFERENCES `room_type` (`room_type_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
