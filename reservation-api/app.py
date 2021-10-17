@@ -41,6 +41,9 @@ db = SQLAlchemy(app)
 Base = automap_base()
 Base.prepare(db.engine, reflect=True)
 Reservations = Base.classes.reservations
+Hotel_Room_Type = Base.classes.hotel_room_type
+Reserved_Room_Type = Base.classes.reserved_room_type
+Hotel = Base.classes.hotel
 
 # engine = create_engine(
 #    'mysql+pymysql://root:1234567890@localhost/hotel_reservation').connect()
