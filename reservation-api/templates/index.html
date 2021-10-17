@@ -1,0 +1,26 @@
+{% extends "base_layout.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block head %}
+{{ super() }}
+{% endblock %}
+
+{% block content %}
+<!-- begin page content -->
+<div class="row">
+    <a href="/">
+        <image src="{{ url_for('static', filename = 'images/home-icon.png'   )}}" width=10%>
+    </a>
+    <div class="col-sm-12">
+        <h1>Home</h1>
+        <p>Find your next escape.</p>
+    </div>
+    <div class="col-sm-12">
+        <div class="col-sm-12 text-sm-center">
+        </div>
+    </div>
+
+</div>
+<!-- end page content -->
+{% endblock %}
