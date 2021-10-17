@@ -10,6 +10,8 @@ body {
 }
 
 .link {
-  text-decoration: none;
   font-size: 1rem;
+}
+a {
+  text-decoration: none;
 }
