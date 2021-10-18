@@ -92,6 +92,40 @@ def loadUsersRes(user_id):
     return db.session.query(Reservations).filter_by(user_id=user_id).all()
 
 
+# function to load the reservation with reservation_id
+def loadResByResID(reservation_id):
+    return db.session.query(Reservations).filter_by(reservation_id=reservation_id).first()
+
+
+# Update Functions
+###################################
+# updates a reservation for a customer
+@app.route('/updateRes', methods=['POST'])
+def updateRes():
+    formID = request.form.get('formID')
+    newCheckIn = request.form.get("newCheckIn")
+    newCheckOut = request.form.get("newCheckOut")
+
+    # fetch the reservation with reservation_id (formID)
+    res = None
+    res = loadResByResID(formID)
+
+    if newCheckIn == "None" or not newCheckIn:
+        res.check_in = None
+    else:
+        res.check_in = newCheckIn
+
+    if newCheckOut == "None" or not newCheckOut:
+        res.check_out = None
+    else:
+        res.check_out = newCheckOut
+
+    db.session.add(res)
+    db.session.commit()
+
+    return redirect("/dashboard")
+
+
 # URL Routes
 ###################################
 
@@ -113,6 +147,17 @@ def dashboard(id=2, admin=""):
         i.hotel_id = hotel_names[i.hotel_id]
 
     return render_template("dashboard.html", usersRes=usersRes)
+
+
+# form for customer to update reservations
+@app.route('/updateResForm', methods=['GET', 'POST'])
+def updateResForm():
+
+    formID = request.args.get('form')
+    # fetch the reservation with reservation_id (formID)
+    res = None
+    res = loadResByResID(formID)
+    return render_template("updateResForm.html", res=res, formID=formID)
 
 
 '''

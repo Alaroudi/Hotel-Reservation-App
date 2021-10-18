@@ -49,16 +49,16 @@
                             <label for="status"><span>Status:</span></label><input type="text" id="status"
                                 value="{{res.status}}" class="readonly-input-field" readonly>
 
-                            <!--
+
                             <script type="text/javascript">
-                                function showForm(requestID) {
-                                    window.location = 'updateResForm?form=' + res.reservation_id;
+                                function showForm(resID) {
+                                    window.location = 'updateResForm?form=' + resID;
                                 }
                             </script>
 
                             <input type="button" name="theButton" value="Edit Reservation"
                                 onclick="showForm('{{res.reservation_id}}');">
-                        -->
+
                             <hr style="height:2px;border-width:0;color:gray;background-color:gray">
 
                         </div>
@@ -70,7 +70,9 @@
 
         </div>
     </div>
-
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
 </div>
 <!-- end page content -->
 {% endblock %}
