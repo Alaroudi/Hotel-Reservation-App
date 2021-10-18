@@ -18,12 +18,12 @@ app = Flask(__name__)
 
 # add database
 # replace password with your servers password
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:Trash_Panda1@localhost/hotel_reservation'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:1234567890@localhost/hotel_reservation'
 
 mydb = mysql.connector.connect(
     host="localhost",
     user="root",
-    passwd="Trash_Panda1"
+    passwd="1234567890"
 )
 
 cursor = mydb.cursor()
@@ -59,32 +59,31 @@ for i in hotel_list:
 
 # initial reservation (preliminary test of session adding and committing)
 # datetime is formatted as year, month, day, hour, minute
-# for i in range(1, 10):
-#     if i % 5 == 1:
-#         initial_res = Reservations(reservation_id=1 + i, user_id=1, hotel_id=i+1,
-#                                 check_in=datetime(2021, 11, 15), check_out=datetime(2021, 11, 16), total_price=5000 + 50 * i, status=0)
-#     elif i % 5 == 2:
-#         initial_res = Reservations(reservation_id=1 + i, user_id=2, hotel_id=i,
-#                                 check_in=datetime(2021, 11, 15), check_out=datetime(2021, 11, 16), total_price=5000 + 50 * i, status=0)
-#     elif i % 5 == 3:
-#         initial_res = Reservations(reservation_id=1 + i, user_id=2, hotel_id= 2,
-#                                 check_in=datetime(2021, 11, 15), check_out=datetime(2021, 11, 16), total_price=5000 + 50 - i, status=0)
-#     elif i % 5 == 4:
-#         initial_res = Reservations(reservation_id=1 + i, user_id=3, hotel_id=4,
-#                                 check_in=datetime(2021, 11, 15), check_out=datetime(2021, 11, 16), total_price=5000 + 50 + i, status=0)
-#     else:
-#         initial_res = Reservations(reservation_id=1 + i, user_id=4, hotel_id=10,
-#                                 check_in=datetime(2021, 11, 15), check_out=datetime(2021, 11, 16), total_price=5000 + 50 / i, status=0)                            
-    
+'''
+for i in range(1, 10):
+    if i % 5 == 1:
+        initial_res = Reservations(reservation_id=1 + i, user_id=1, hotel_id=i+1,
+                                   check_in=datetime(2021, 11, 15), check_out=datetime(2021, 11, 16), total_price=5000 + 50 * i, status=0)
+    elif i % 5 == 2:
+        initial_res = Reservations(reservation_id=1 + i, user_id=2, hotel_id=i,
+                                   check_in=datetime(2021, 11, 15), check_out=datetime(2021, 11, 16), total_price=5000 + 50 * i, status=0)
+    elif i % 5 == 3:
+        initial_res = Reservations(reservation_id=1 + i, user_id=2, hotel_id=2,
+                                   check_in=datetime(2021, 11, 15), check_out=datetime(2021, 11, 16), total_price=5000 + 50 - i, status=0)
+    elif i % 5 == 4:
+        initial_res = Reservations(reservation_id=1 + i, user_id=3, hotel_id=4,
+                                   check_in=datetime(2021, 11, 15), check_out=datetime(2021, 11, 16), total_price=5000 + 50 + i, status=0)
+    else:
+        initial_res = Reservations(reservation_id=1 + i, user_id=4, hotel_id=10,
+                                   check_in=datetime(2021, 11, 15), check_out=datetime(2021, 11, 16), total_price=5000 + 50 / i, status=0)
 
-#     db.session.add(initial_res)
+    db.session.add(initial_res)
 
-# db.session.commit()
+db.session.commit()
+'''
 # results = db.session.query(Reservations).all()
 # for r in results:
 #    print(r.check_out)
-
-
 
 
 # function to load reservations belonging to user_id
@@ -126,6 +125,22 @@ def updateRes():
     return redirect("/dashboard")
 
 
+# Delete Functions
+###################################
+@app.route('/deleteRes', methods=['POST'])
+def deleteRes():
+    formID = request.form.get('formID')
+
+    # fetch the reservation with reservation_id (formID)
+    res = None
+    res = loadResByResID(formID)
+
+    db.session.delete(res)
+    db.session.commit()
+
+    return redirect("/dashboard")
+
+
 # URL Routes
 ###################################
 
@@ -160,6 +175,17 @@ def updateResForm():
     return render_template("updateResForm.html", res=res, formID=formID)
 
 
+# confirmation for customer to delete reservation
+@app.route('/deleteResConfirmation', methods=['GET', 'POST'])
+def deleteResConfirmation():
+
+    formID = request.args.get('form')
+    # fetch the reservation with reservation_id (formID)
+    res = None
+    res = loadResByResID(formID)
+    return render_template("deleteResConfirmation.html", res=res, formID=formID)
+
+
 '''
 # allows customer to delete reservation
 
@@ -184,5 +210,5 @@ def add_res(id, admin):
 
 
 if __name__ == "__main__":
-    
+
     app.run(debug=True)

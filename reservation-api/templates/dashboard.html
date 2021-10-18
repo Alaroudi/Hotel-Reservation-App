@@ -54,10 +54,16 @@
                                 function showForm(resID) {
                                     window.location = 'updateResForm?form=' + resID;
                                 }
+                                function deleteRes(resID) {
+                                    window.location = 'deleteResConfirmation?form=' + resID;
+                                }
                             </script>
 
                             <input type="button" name="theButton" value="Edit Reservation"
                                 onclick="showForm('{{res.reservation_id}}');">
+
+                            <input type="button" name="theDelButton" value="Delete Reservation"
+                                onclick="deleteRes('{{res.reservation_id}}');">
 
                             <hr style="height:2px;border-width:0;color:gray;background-color:gray">
 

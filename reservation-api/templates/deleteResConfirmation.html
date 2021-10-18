@@ -1,0 +1,59 @@
+{% extends "base_layout.html" %}
+
+{% block title %}Confirm Deletion of Reservation{% endblock %}
+
+{% block head %}
+{{ super() }}
+{% endblock %}
+
+{% block content %}
+<!-- begin page content -->
+<div class="row">
+    <a href="/">
+        <image src="{{ url_for('static', filename = 'images/home-icon.png'   )}}" width=10%>
+    </a>
+    <div class="col-sm-12">
+        <h1>Confirm Deletion of Reservation</h1>
+        <p>Are you sure you would like to delete your reservation?</p>
+    </div>
+    <div class="col-sm-12">
+        <div class="col-sm-12 text-sm-center">
+            <form method="POST" action="./deleteRes">
+                <section>
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <label for="formid"><span></span></label><input type="text" id="formid"
+                                    value="{{formID}}" name="formID" class="readonly-input-field" readonly>
+                                <label for="hotel"><span>Hotel Name:</span></label><input type="text" id="hotel"
+                                    value="insert hotel name here" class="readonly-input-field" readonly>
+                                <label for="check_in"><span>Check in:</span></label><input type="date" id="check_in"
+                                    value="{{res.check_in}}" name="check_in" class="readonly-input-field" readonly>
+                                <label for="check_out"><span>Check out:</span></label><input type="date" id="check_out"
+                                    value="{{res.check_in}}" name="check_out" class="readonly-input-field" readonly>
+                                <label for="total_price"><span>Total price:</span></label><input type="text"
+                                    id="total_price" value="{{res.total_price}}" class="readonly-input-field" readonly>
+                            </div>
+                            <div class="col-sm-6">
+                                <!--Rooms-->
+                                <p>Rooms will go here</p>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="submit" value="YES">
+                    <script type="text/javascript">
+                        function redirectDashboard() {
+                            window.location = 'dashboard';
+                        }
+                    </script>
+                    <input type="button" name="noDeleteRes" value="NO" onclick="redirectDashboard();">
+                </section>
+            </form>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+</div>
+<!-- end page content -->
+{% endblock %}
