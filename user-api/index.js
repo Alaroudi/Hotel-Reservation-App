@@ -67,7 +67,7 @@ app.delete("/api/users/:id", (req, res) => {
             transaction.commit()
         }).catch(error => {
             transaction.rollback()
-            res.send(error, 400)
+            res.status(400).send(error)
         })
 
     })
