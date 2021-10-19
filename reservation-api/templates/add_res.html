@@ -1,76 +1,67 @@
 {% extends "base_layout.html" %}
 
-{% block title %}Add Reservation{% endblock %}
+{% block title %}Create Reservation{% endblock %}
 
 {% block head %}
 {{ super() }}
 {% endblock %}
 
 {% block content %}
+
 <!-- begin page content -->
 <div class="row">
+
     <a href="/">
         <image src="{{ url_for('static', filename = 'images/home-icon.png'   )}}" width=10%>
+
     </a>
     <div class="col-sm-12">
-        <h1>Dashboard</h1>
-        <p>View and update your reservations.</p>
+        <h1>Create Reservation</h1>
+        <p>Add your reservation.</p>
     </div>
-    <div class="col-sm-12">
-        <div class="col-sm-12 text-sm-center">
-            <!--TOP LEVEL: For each res (reservation row) in the usersRes, which was passed to this page by app.py-->
-            <!--For sorting reference: https://jinja.palletsprojects.com/en/2.11.x/templates/#sort-->
-            {% for res in usersRes|sort(attribute="reservation_id") %}
-            <!--Accordian structure-->
-            <div id="accordion-{{ loop.index }}" role="tablist">
-                <div class="card">
-                    <div class="card-header" role="tab" id="heading-{{ loop.index }}">
-                        <h5 class="mb-0">
-                            <a class="collapsed" data-toggle="collapse" href="#collapse-{{ loop.index }}"
-                                aria-expanded="true" aria-controls="collapse-{{ loop.index }}">
-                                Name of reservation {{ loop.index }} to go here
-                            </a>
-                        </h5>
-                    </div>
 
-                    <div id="collapse-{{ loop.index }}" class="collapse" role="tabpanel"
-                        aria-labelledby="heading-{{ loop.index }}" data-parent="#accordion-{{ loop.index }}">
-
-
-                        <div class="card-body">
-                            <label for="hotel"><span>Hotel:</span></label><input type="text" id="hotel"
-                                value="{{res.hotel_id}}" class="readonly-input-field" readonly>
-                            <label for="check_in"><span>Check in:</span></label><input type="text" id="check_in"
-                                value="{{res.check_in}}" name="formID" class="readonly-input-field" readonly>
-                            <label for="check_out"><span>Check out:</span></label><input type="text" id="check_out"
-                                value="{{res.check_out}}" class="readonly-input-field" readonly>
-                            <label for="total_price"><span>Price:</span></label><input type="text" id="price"
-                                value="{{res.total_price}}" class="readonly-input-field" readonly>
-                            <label for="status"><span>Status:</span></label><input type="text" id="status"
-                                value="{{res.status}}" class="readonly-input-field" readonly>
-
-                            <!--
-                            <script type="text/javascript">
-                                function showForm(requestID) {
-                                    window.location = 'updateResForm?form=' + res.reservation_id;
-                                }
-                            </script>
-
-                            <input type="button" name="theButton" value="Edit Reservation"
-                                onclick="showForm('{{res.reservation_id}}');">
-                        -->
-                            <hr style="height:2px;border-width:0;color:gray;background-color:gray">
-
+    <div class="form-style-1">
+        <formtitle>Form to A Create New Reservation</formtitle>
+        <form method="POST" action="./createRes">
+            <section>
+                <div class="container">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <label for="userID"><span></label><input type="text" id="userID"
+                                value={{userID}} name="userID" class="readonly-input-field">
+                            <label for="hotel"><span>Hotel Name:</label>
+                            <select name="hotel" id="hotel" method="GET" action="/">
+                                <option value="hotel_options[0]" selected>{{hotel_options[0]}}</option>
+                                {% for hotel in hotel_options[1:] %}
+                                    <option value= "{{hotel}}" SELECTED>{{hotel}}</option>"
+                                {% endfor %}
+                            </select>
+                            <label for="check_in"><span>Check in:</span></label><input type="date" id="check_in"
+                                name="checkIn" class="text-input-field">
+                            <label for="check_out"><span>Check out:</span></label><input type="date" id="check_out"
+                                name="checkOut" class="text-input-field">
+                            <label for="num_room"><span>Number of Rooms:<input type="number"
+                                value= 0 name="num_room" class="input-field">
+                            
+                        </div>
+                        <div class="col-sm-6">
+                            <!--Rest of the info needed-->
+                            <br><label for="standard"><span>Number of Standard Rooms:<input type="number"
+                                value= 0 name="standard" class="input-field">
+                            <br><br><label for="queen"><span>Number of Queen Rooms:<input type="number"
+                                value= 0 name="queen" class="input-field">
+                            <br><br><label for="king"><span>Number of King Rooms:<input type="number"
+                                value= 0 name="king" class="input-field">
+                            <br><br><label for="total_price"><span>Total price:</span></label><input type="text"
+                                id="total_price" class="readonly-input-field" readonly>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            {% endfor %}
-
-        </div>
+                <br><input type="submit" value="Submit Reservation">
+            </section>
+            <br><br><br>
+        </form>
     </div>
-
 </div>
 <!-- end page content -->
 {% endblock %}

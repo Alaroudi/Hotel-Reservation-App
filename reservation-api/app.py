@@ -18,12 +18,12 @@ app = Flask(__name__)
 
 # add database
 # replace password with your servers password
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:1234567890@localhost/hotel_reservation'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:Trash_Panda1@localhost/hotel_reservation'
 
 mydb = mysql.connector.connect(
     host="localhost",
     user="root",
-    passwd="1234567890"
+    passwd="Trash_Panda1"
 )
 
 cursor = mydb.cursor()
@@ -48,10 +48,12 @@ Hotel = Base.classes.hotel
 
 # names of hotels match id's
 hotel_names = {}
+reverse_hotel_names = {}
 hotel_list = db.session.query(Hotel).order_by(Hotel.hotel_id).all()
 
 for i in hotel_list:
     hotel_names[i.hotel_id] = str(i.hotel_name)
+    reverse_hotel_names[str(i.hotel_name)] = i.hotel_id
 
 
 # engine = create_engine(
@@ -140,6 +142,43 @@ def deleteRes():
 
     return redirect("/dashboard")
 
+# CREATE FUNCTIONS
+######################################
+@app.route('/createRes', methods=['POST'])
+def add_res():
+    user_id = request.form.get("userID")
+    hotel = request.form.get("hotel")
+    checkIn = request.form.get("checkIn")
+    checkOut = request.form.get("checkOut")
+    num_room = int(request.form.get("num_room"))
+    standard = int(request.form.get("standard"))
+    queen = int(request.form.get("queen"))
+    king = int(request.form.get("king"))
+    
+    if checkIn:
+        if checkOut:
+            if num_room > 0:
+                if standard + queen + king == num_room:
+                    res = Reservations(user_id=user_id, hotel_id=reverse_hotel_names[hotel],
+                                   check_in=checkIn, check_out=checkOut, total_price=5000 + 50, status="CONFIRMED")
+        #         else:
+        #             flash("ERROR PLEASE SELECT THE TYPE OF ROOMS YOU WOULD LIKE")
+        #             return render_template('add_res.html', userID=user_id, hotel_options=hotel_names.values())
+
+        #     else:
+        #         flash("ERROR PLEASE ENTER THE NUMBER OF ROOMS WANTED MIN:1")
+        #         return render_template('add_res.html', userID=user_id, hotel_options=hotel_names.values())
+        # else:
+        #     flash("ERROR PLEASE SELECT A CHECK OUT DATE")
+        #     return render_template('add_res.html', userID=user_id, hotel_options=hotel_names.values())
+    else:
+        #flash("ERROR PLEASE SELECT A CHECK IN DATE")
+        return render_template('add_res.html', userID=user_id, hotel_options=hotel_names.values())
+    
+    db.session.add(res)
+    db.session.commit()
+    return redirect("/dashboard")
+
 
 # URL Routes
 ###################################
@@ -185,29 +224,15 @@ def deleteResConfirmation():
     res = loadResByResID(formID)
     return render_template("deleteResConfirmation.html", res=res, formID=formID)
 
+# form to create reservation
+@app.route('/add_res', methods=['GET', 'POST'])
+def add_res_form():
 
-'''
-# allows customer to delete reservation
-
-@app.route('/reservations')
-def delete_res(id, admin):
-    print()
-
-# edit reservation
+    userID = request.args.get('ID')
+    hotel_options = list(hotel_names.values())
 
 
-@app.route('/reservastions')
-def edit_res(id, admin):  # send in jwt token id
-    print()
-
-# Add reservation
-
-
-@app.route('/reservastions')
-def add_res(id, admin):
-    print()
-'''
-
+    return render_template("add_res.html", userID=userID, hotel_options=hotel_options)
 
 if __name__ == "__main__":
 

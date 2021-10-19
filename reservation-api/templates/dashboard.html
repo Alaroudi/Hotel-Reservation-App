@@ -14,7 +14,18 @@
     </a>
     <div class="col-sm-12">
         <h1>Dashboard</h1>
-        <p>View and update your reservations.</p>
+        <p>View, Create and Update your reservations.</p>
+    </div>
+    <div id="createReservationButton">
+        <script type="text/javascript">
+            function createForm(userID) {
+                window.location = 'add_res?ID=' + userID;
+            }
+            
+        </script>
+
+        <input type="button" name="createRes" value="Create Reservation"
+            onclick="createForm('{{usersRes[0].user_id}}');">
     </div>
     <div class="col-sm-12">
         <div class="col-sm-12 text-sm-center">
