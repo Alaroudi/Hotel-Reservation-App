@@ -11,8 +11,8 @@ const app = express();
 
 app.use(express.json())
 sequelize.authenticate().then(() => {
-    console.log("Connected")
     User.sync()
+    console.log("Connected")
 }).catch((error) => {
     console.log("Error:", error)
 });
@@ -23,20 +23,25 @@ app.get("/api/users/", (req, res) => {
 
 app.get("/api/users/:id", (req, res) => {
     User.findByPk(req.params.id).then(user => {
-        if (user === null)
-            return res.status(400)
-        return res.send(user)
+        if (!user)
+            res.status(400).send("User not found")
+        else
+            res.send(user)
+    }).catch(error => {
+        res.status(400).send(error)
     })
 })
 
 app.post("/api/users/", (req, res) => {
     sequelize.transaction().then(transaction => {
         User.create(req.body, {transaction: transaction}).then(user => {
-            transaction.commit()
-            res.send(user.id)
+            transaction.commit().then(() => {
+                res.send(user.id)
+            })
         }).catch(error => {
-            transaction.rollback()
-            res.status(400).send(error)
+            transaction.rollback().then(() => {
+                res.status(400).send(error)
+            })
         })
     })
 })
@@ -47,14 +52,21 @@ app.put("/api/users/:id", (req, res) => {
             where: {
                 userID: req.params.id
             }
-        }).then(() => {
-            transaction.commit()
+        }).then(affectedCount => {
+            if (affectedCount[0] === 0)
+                transaction.rollback().then(() => {
+                    res.status(400).send("User not found")
+                })
+            else
+                transaction.commit().then(() => {
+                    res.send("User updated")
+                })
         }).catch(error => {
-            transaction.rollback()
-            res.status(400).send(error)
+            transaction.rollback().then(() => {
+                res.status(400).send(error)
+            })
         })
     })
-    res.send(req.params.id)
 })
 
 app.delete("/api/users/:id", (req, res) => {
@@ -63,13 +75,20 @@ app.delete("/api/users/:id", (req, res) => {
             where: {
                 userID: req.params.id
             }
-        }).then(() => {
-            transaction.commit()
+        }).then(affectedCount => {
+            if (affectedCount.valueOf() === 0)
+                transaction.rollback().then(() => {
+                    res.status(400).send("User not found")
+                })
+            else
+                transaction.commit().then(() => {
+                    res.send("User deleted")
+                })
         }).catch(error => {
-            transaction.rollback()
-            res.status(400).send(error)
+            transaction.rollback().then(() => {
+                res.status(400).send(error)
+            })
         })
-
     })
 })
 
