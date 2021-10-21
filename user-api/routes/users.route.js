@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { User, sequelize } = require("../models");
+const {User, sequelize} = require("../models");
 
 router.get("/", (req, res) => {
   User.findAll().then(user => res.json(user));
@@ -8,22 +8,22 @@ router.get("/", (req, res) => {
 router.get("/:id", (req, res) => {
   User.findByPk(req.params.id)
     .then(user => {
-      if (user === null) return res.status(404).send("User not found");
-      return res.send(user);
+      if (user === null) res.status(404).send("User not found");
+      else res.send(user);
     })
-    .catch(error => res.status(500).send(error));
+    .catch(error => res.status(400).send(error));
 });
 
 router.post("/", (req, res) => {
   sequelize.transaction().then(transaction => {
-    User.create(req.body, { transaction: transaction })
-      .then(user => {
+    User.create(req.body, {transaction: transaction})
+      .then(() => {
+        res.send("User created");
         transaction.commit();
-        res.send(user.id);
       })
       .catch(error => {
-        transaction.rollback();
         res.status(400).send(error);
+        transaction.rollback();
       });
   });
 });
@@ -32,34 +32,46 @@ router.put("/:id", (req, res) => {
   sequelize.transaction().then(transaction => {
     User.update(req.body, {
       where: {
-        userID: req.params.id
-      }
+        user_id: req.params.id
+      },
+      transaction: transaction
     })
-      .then(() => {
-        transaction.commit();
+      .then(affected => {
+        if (affected[0] !== 1) {
+          res.status(400).send("Could not update user");
+          transaction.rollback();
+        } else {
+          res.send("User updated");
+          transaction.commit();
+        }
       })
       .catch(error => {
-        transaction.rollback();
         res.status(400).send(error);
+        transaction.rollback();
       });
   });
-  res.send(req.params.id);
 });
 
 router.delete("/:id", (req, res) => {
   sequelize.transaction().then(transaction => {
     User.destroy({
       where: {
-        userID: req.params.id
-      }
+        user_id: req.params.id
+      },
+      transaction: transaction
     })
-      .then(() => {
-        transaction.commit();
-        res.send();
+      .then(affected => {
+        if (affected !== 1) {
+          res.status(400).send("Could not delete user");
+          transaction.rollback();
+        } else {
+          res.send("User deleted");
+          transaction.commit();
+        }
       })
       .catch(error => {
+        res.status(400).send(error);
         transaction.rollback();
-        res.send(error, 400);
       });
   });
 });
