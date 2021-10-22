@@ -125,6 +125,22 @@ def generate_room_type_entry(room_type_results):
             result_list.append(new_entry)
     return result_list
 
+## ---------- SingleResource ---------- ##
+# class for interacting with any class that deals with a single resource
+class SingleResource(Resource):
+
+    # function to delete an instance of a SingleResource
+    def delete(self, table, id):
+        # select the correct instance
+        result = session.query(table).get(id)
+        # if there is no instance that matches the ID, show error message
+        if not result:
+            abort(404, description  = f"ID {id} does not exist in the database.")
+        
+        # delete the hotel and commit
+        session.delete(result)
+        session.commit()
+
 ## ---------- Hotels ---------- ##
 # class for interacting with all hotels in the database
 class AllHotels(Resource):
@@ -144,6 +160,7 @@ class AllHotels(Resource):
         amenities = request.json["amenities"]
         room_types = request.json["room_types"]
 
+        # check if this hotel_id is already in the database
         result = session.query(Hotel).filter(Hotel.hotel_id == hotel_id).first()
         if result:
             abort(409, f"Hotel ID {hotel_id} already exists in the database.")
@@ -167,7 +184,7 @@ class AllHotels(Resource):
             current_amenity = session.query(Amenity).filter(Amenity.amenity_id == amenity_id).first()
             # if the amenity doesn't exist, send error message
             if not current_amenity:
-                # delete neww hotel and commit
+                # delete new hotel and commit
                 session.delete(new_hotel)
                 session.commit()
                 abort(409, description = f"Amenity ID {amenity_id} does not exist in the database.")
@@ -195,7 +212,7 @@ class AllHotels(Resource):
         # add and commit new hotel to the database
         session.add(new_hotel)
         session.commit()
-        return {"message": "The hotel was successfully added to the database."}
+        return {"message": f"Hotel ID {hotel_id} was successfully added to the database."}
     
     # function to get all hotels in the database
     def get(self):
@@ -216,22 +233,13 @@ class AllHotels(Resource):
 ## TODO: PUT for SingleHotel
 
 # class for interacting with one hotel in the database
-class SingleHotel(Resource):
+class SingleHotel(SingleResource):
     
     # function to delete a hotel
     def delete(self, hotel_id):
-        # select the correct hotel
-        result = session.query(Hotel).get(hotel_id)
-        # if there is not hotel that matches the ID, show error message
-        if not result:
-            abort(404, description  = f"Hotel ID {hotel_id} does not exist in the database.")
-        
-        # delete the hotel and commit
-        session.delete(result)
-        session.commit()
+        super().delete(Hotel, hotel_id)
         return {"message": f"Hotel ID {hotel_id} was successfully deleted."}
-        
-    
+
     # function to get a single hotel in the database by hotel_id
     def get(self, hotel_id):
         # set up list for return
@@ -249,8 +257,6 @@ class SingleHotel(Resource):
         return result[0]
 
 ## ---------- Amenities ---------- ##
-## TODO: POST for AllAmenities
-
 # class for interacting with all amenities in the database
 class AllAmenities(Resource):
     
@@ -268,10 +274,34 @@ class AllAmenities(Resource):
         # return the list of amenities
         return result
 
-## TODO: DELETE and PUT for Single Amenity
+    # function to add a new amenity into the database
+    def post(self):
+        # store each token into a variable
+        amenity_id = request.json["amenity_id"]
+        amenity_name = request.json["amenity_name"]
+
+        # check if this amenity_id is already in the database
+        result = session.query(Amenity).filter(Amenity.amenity_id == amenity_id).first()
+        if result:
+            (409, f"Amenity ID {amenity_id} exists in the database.")
+        
+        # create a new RoomType object
+        new_amenity = Amenity(amenity_id = amenity_id, amenity_name = amenity_name)
+
+        # add and commit new amenity to database
+        session.add(new_amenity)
+        session.commit()
+        return {"message": f"Amenity ID {amenity_id} was successfully added to the database."}
+
+## TODO: PUT for Single Amenity
 
 # class for interacting with one amenity in the database
-class SingleAmenity(Resource):
+class SingleAmenity(SingleResource):
+    
+    # function to delete an amenity
+    def delete(self, amenity_id):
+        super().delete(Amenity, amenity_id)
+        return {"message": f"Amenity ID {amenity_id} was successfully deleted."}
     
     # function to get a single amenity in the database by amenity_id
     def get(self, amenity_id):
@@ -283,13 +313,11 @@ class SingleAmenity(Resource):
         result = generate_amenity_entry(amenity_results)
         # if there are no amenities in the database, show error message
         if not result:
-            abort(404, description = "There is no amenity with that id in the database.")
+            abort(404, description = f"Amenity ID {amenity_id} already exists in the database.")
         # return the list of amenities
         return result[0]
 
 ## ---------- Room Types ---------- ##
-## TODO: POST for AllRoomTypes
-
 # class for interacting with all room types in the database
 class AllRoomTypes(Resource):
     
@@ -307,10 +335,34 @@ class AllRoomTypes(Resource):
         # return the list of room types
         return result
 
-## TODO: DELETE and PUT for SingleRoomType
+    # function to add a new room_type to the database
+    def post(self):
+        # store each token into a variable
+        room_type_id = request.json["room_type_id"]
+        room_type_name = request.json["room_type_name"]
+
+        # check if this room_type_id is already in the database
+        result = session.query(RoomType).filter(RoomType.room_type_id == room_type_id).first()
+        if result:
+            (409, f"Room type ID {room_type_id} exists in the database.")
+        
+        # create a new RoomType object
+        new_room_type = RoomType(room_type_id = room_type_id, room_type_name = room_type_name)
+
+        # add and commit new room_type to database
+        session.add(new_room_type)
+        session.commit()
+        return {"message": f"Room type ID {room_type_id} was successfully added to the database."}
+
+## TODO: PUT for SingleRoomType
 
 # class for interacting with one room type in the database
-class SingleRoomType(Resource):
+class SingleRoomType(SingleResource):
+    
+    # function to delete a room_type
+    def delete(self, room_type_id):
+        super().delete(RoomType, room_type_id)
+        return {"message": f"Room_type ID {room_type_id} was successfully deleted."}
     
     # function to get a single room type in the database by room_type_id
     def get(self, room_type_id):
@@ -322,7 +374,7 @@ class SingleRoomType(Resource):
         result = generate_room_type_entry(room_type_results)
         # if there are no room type in the database, show error message
         if not result:
-            abort(404, description = "There is no room type with that ID in the database.")
+            abort(404, description = f"Room type ID {room_type_id} already exists in the database.")
         # return the list of room types
         return result[0]
 
