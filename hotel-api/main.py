@@ -64,31 +64,22 @@ def generate_hotel_entry(hotel_amenity_results, room_type_results):
         room_type_list = []
         # append each matching room type that is located in the hotel to the list
         for search_hotel_II, search_room_type in room_type_results:
+            # for the current hotel, add the room_type data
             if search_hotel_II.hotel_id == current_hotel:
-                # add standard rooms to the list
-                if search_room_type.room_type_id == 1:
-                    inner_dict = {}
-                    inner_dict["price"] = float(search_room_type.price_per_night)
-                    inner_dict["count"] = search_room_type.room_type_count
-                    standard_dict = {}
-                    standard_dict["Standard"] = inner_dict
-                    room_type_list.append(standard_dict)
-                # add queen rooms to the list
-                if search_room_type.room_type_id == 2:
-                    inner_dict = {}
-                    inner_dict["price"] = float(search_room_type.price_per_night)
-                    inner_dict["count"] = search_room_type.room_type_count
-                    queen_dict = {}
-                    queen_dict["Queen"] = inner_dict
-                    room_type_list.append(queen_dict)
-                # add king rooms to the list
-                if search_room_type.room_type_id == 3:
-                    inner_dict = {}
-                    inner_dict["price"] = float(search_room_type.price_per_night)
-                    inner_dict["count"] = search_room_type.room_type_count
-                    king_dict = {}
-                    king_dict["King"] = inner_dict
-                    room_type_list.append(king_dict)
+                # set up dictionary for price and count
+                inner_dict = {}
+                inner_dict["price"] = float(search_room_type.price_per_night)
+                inner_dict["count"] = search_room_type.room_type_count
+                # set up dictionary to hold the information for the outer dictionary
+                type_dict = {}
+                # get the correct room_type
+                query = session.query(RoomType).filter(RoomType.room_type_id == search_room_type.room_type_id).first()
+                # store the name of the room_type
+                room_type_name = query.room_type_name
+                # add the data to the outer dictionary
+                type_dict[room_type_name] = inner_dict
+                # append that to the list
+                room_type_list.append(type_dict)
         new_entry["room_types"] = room_type_list
         # append the entry to the result list
         if new_entry not in result_list:
