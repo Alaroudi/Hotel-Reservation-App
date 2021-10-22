@@ -95,7 +95,7 @@ def generate_hotel_entry(hotel_amenity_results, room_type_results):
             result_list.append(new_entry)
     return result_list
 
-# function to set a valid json for a amenity object
+# function to set a valid json for an amenity object
 def generate_amenity_entry(amenity_results):
     result_list = []
     for amenity in amenity_results:
@@ -213,6 +213,8 @@ class AllHotels(Resource):
         # return the list of hotels
         return result
 
+## TODO: PUT for SingleHotel
+
 # class for interacting with one hotel in the database
 class SingleHotel(Resource):
     
@@ -247,6 +249,8 @@ class SingleHotel(Resource):
         return result[0]
 
 ## ---------- Amenities ---------- ##
+## TODO: POST for AllAmenities
+
 # class for interacting with all amenities in the database
 class AllAmenities(Resource):
     
@@ -263,6 +267,8 @@ class AllAmenities(Resource):
             abort(404, description = "There are no amenities in the database.")
         # return the list of amenities
         return result
+
+## TODO: DELETE and PUT for Single Amenity
 
 # class for interacting with one amenity in the database
 class SingleAmenity(Resource):
@@ -282,6 +288,8 @@ class SingleAmenity(Resource):
         return result[0]
 
 ## ---------- Room Types ---------- ##
+## TODO: POST for AllRoomTypes
+
 # class for interacting with all room types in the database
 class AllRoomTypes(Resource):
     
@@ -299,6 +307,8 @@ class AllRoomTypes(Resource):
         # return the list of room types
         return result
 
+## TODO: DELETE and PUT for SingleRoomType
+
 # class for interacting with one room type in the database
 class SingleRoomType(Resource):
     
@@ -315,10 +325,6 @@ class SingleRoomType(Resource):
             abort(404, description = "There is no room type with that ID in the database.")
         # return the list of room types
         return result[0]
-
-## TODO: PUT for hotels
-#        POST, PUT, and DEL for amenities
-#        POST, PUT, and DEL for room_types
 
 # add resources to api
 # Hotel resources
