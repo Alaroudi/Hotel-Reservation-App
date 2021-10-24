@@ -5,7 +5,7 @@ const PageNotFound = () => {
     <img
       src="./images/page_not_found.svg"
       alt="Page not found"
-      style={{ width: "100%", height: "100vh" }}
+      style={{ width: "100%", height: "100%" }}
     />
   );
 };

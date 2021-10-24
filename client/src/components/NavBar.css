@@ -27,23 +27,22 @@
 }
 
 .nav__item {
-  padding: 0.5rem 2rem;
+  padding: 1rem 2rem;
   border-bottom: 1px solid darkgrey;
   transition: all 0.3s;
   border-radius: 5px;
+  cursor: pointer;
 }
 
 .nav__item:last-of-type {
   border-bottom: none;
 }
-.nav__item > a {
+.nav__item {
   color: #d2d0db;
 }
 
 .nav__item:hover {
   background: #63686c;
-}
-.nav__item:hover > a {
   color: #fff;
 }
 
@@ -69,7 +68,7 @@
   opacity: 1;
 }
 
-@media screen and (min-width: 700px) {
+@media screen and (min-width: 768px) {
   .brand__name {
     font-size: 1.2rem;
   }

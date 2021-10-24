@@ -104,7 +104,7 @@ const SignIn = () => {
           </Box>
         </div>
         <div>
-          <img src="./images/login.svg" alt="" width="100%" />
+          <img src="/images/login.svg" alt="" width="100%" />
         </div>
       </div>
     </div>
