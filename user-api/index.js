@@ -4,7 +4,9 @@ const app = express();
 const cors = require("cors");
 const db = require("./models");
 
-app.use(cors({ origin: process.env.REACT_APP_URL }));
+app.use(
+  cors({ origin: process.env.REACT_APP_URL, exposedHeaders: "x-auth-token" })
+);
 app.use(express.json());
 
 db.sequelize.sync();
