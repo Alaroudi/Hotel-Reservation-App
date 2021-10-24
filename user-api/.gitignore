@@ -80,6 +80,11 @@ web_modules/
 .env.production
 .env.local
 
+# Virtual Enviorment
+env/
+
+# Jetbrains project settings
+.idea/
 
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
