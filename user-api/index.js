@@ -7,6 +7,7 @@ app.use(express.json());
 const db = require("./models");
 db.sequelize.sync();
 
+app.use("/api/auth", require("./routes/auth.route"));
 app.use("/api/users", require("./routes/users.route"));
 
 app.get("/", (req, res) => {

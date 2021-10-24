@@ -1,8 +1,7 @@
-const {Model, DataTypes} = require("sequelize");
+const { Model, DataTypes } = require("sequelize");
 
 module.exports = sequelize => {
-  class User extends Model {
-  }
+  class User extends Model {}
 
   User.init(
     {
@@ -52,9 +51,7 @@ module.exports = sequelize => {
       phone_number: {
         type: DataTypes.CHAR(15),
         allowNull: true,
-        validate: {
-          notEmpty: true
-        }
+        defaultValue: null
       },
       date_of_birth: {
         type: DataTypes.DATEONLY,
@@ -64,7 +61,7 @@ module.exports = sequelize => {
         }
       }
     },
-    {sequelize, modelName: "user", freezeTableName: true, timestamps: false}
+    { sequelize, modelName: "user", freezeTableName: true, timestamps: false }
   );
   return User;
 };
