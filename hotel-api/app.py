@@ -33,7 +33,6 @@ hotel_put_args.add_argument("weekend_diff_percentage", type = float, help = "Ent
 hotel_put_args.add_argument("amenities", type = list, help = "Enter the amenities of the hotel. (list of strings)")
 hotel_put_args.add_argument("room_types", type = list, help = "Enter the room type data of the hotel. (list of dictionaries)")
 
-
 # set up list for valid amenities
 valid_amenities = ["Pool", "Gym", "Spa", "Business Office", "Wifi"]
 
@@ -366,15 +365,16 @@ class AllHotels(Resource):
         except sq.exc.DBAPIError as e:
             session.rollback()
             abort(500, description = "The database server is offline.")
-        # generate a list from hotels
-        result = generate_hotel_entry(hotels)
+        else:
+            # generate a list from hotels
+            result = generate_hotel_entry(hotels)
 
-        # if there are no hotels, show error
-        if not result:
-            abort(404, description  = "There are no hotels in the database.")
-        
-        # return the results
-        return result
+            # if there are no hotels, show error
+            if not result:
+                abort(404, description  = "There are no hotels in the database.")
+            
+            # return the results
+            return result
 
     # function to add a new hotel to the database
     def post(self):
@@ -389,40 +389,40 @@ class AllHotels(Resource):
         except sq.exc.DBAPIError as e:
             session.rollback()
             abort(500, description = "The database server is offline.")
-        
-        if result:
-            # if it already exists, show error message
-            abort(400, f"This hotel already exists in the database. (Hotel ID {result.hotel_id})")
-        city = request.json["city"]
-        state = request.json["state"]
-        zipcode = request.json["zipcode"]
-        phone_number = request.json["phone_number"]
-        weekend_diff_percentage = request.json["weekend_diff_percentage"]
-        amenities = request.json["amenities"]
-        room_types = request.json["room_types"]
+        else:
+            if result:
+                # if it already exists, show error message
+                abort(400, f"This hotel already exists in the database. (Hotel ID {result.hotel_id})")
+            city = request.json["city"]
+            state = request.json["state"]
+            zipcode = request.json["zipcode"]
+            phone_number = request.json["phone_number"]
+            weekend_diff_percentage = request.json["weekend_diff_percentage"]
+            amenities = request.json["amenities"]
+            room_types = request.json["room_types"]
 
-        # check to see if the number_of_rooms matches the total from room_types
-        for room in room_types:
-            if "Standard" in room:
-                standard_count = room["Standard"]["count"]
-            if "Queen" in room:
-                queen_count = room["Queen"]["count"]
-            if "King" in room:
-                king_count = room["King"]["count"]
-        
-        # generate the new Hotel object
-        new_hotel = generate_new_hotel(hotel_name, street_address, city, state, zipcode, phone_number, weekend_diff_percentage, amenities, room_types)
-        
-        # add and commit the new hotel to database
-        try:
-            session.add(new_hotel)
-            session.commit()
-        except sq.exc.DBAPIError as e:
-            session.rollback()
-            abort(500, description = "The database server is offline.")
-
-        # return success message
-        return {"message": f"Hotel ID {new_hotel.hotel_id} was successfully added to the database."}
+            # check to see if the number_of_rooms matches the total from room_types
+            for room in room_types:
+                if "Standard" in room:
+                    standard_count = room["Standard"]["count"]
+                if "Queen" in room:
+                    queen_count = room["Queen"]["count"]
+                if "King" in room:
+                    king_count = room["King"]["count"]
+            
+            # generate the new Hotel object
+            new_hotel = generate_new_hotel(hotel_name, street_address, city, state, zipcode, phone_number, weekend_diff_percentage, amenities, room_types)
+            
+            # add and commit the new hotel to database
+            try:
+                session.add(new_hotel)
+                session.commit()
+            except sq.exc.DBAPIError as e:
+                session.rollback()
+                abort(500, description = "The database server is offline.")
+            else:
+                # return success message
+                return {"message": f"Hotel ID {new_hotel.hotel_id} was successfully added to the database."}
 
 # class for interacting with one hotel in the database
 class SingleHotel(Resource):
@@ -435,88 +435,89 @@ class SingleHotel(Resource):
         except sq.exc.DBAPIError as e:
             session.rollback()
             abort(500, description = "The database server is offline.")
-        # get the args from the request
-        args = hotel_put_args.parse_args()
+        else:
+            # get the args from the request
+            args = hotel_put_args.parse_args()
 
-        # if there is no instance that matches the ID, show error message
-        if not hotel:
-            abort(404, description  = f"Hotel ID {hotel_id} does not exist in the database.")
-        
-        # check to see which arguments have values
-        if args["hotel_name"]:
-            hotel.hotel_name = request.json["hotel_name"]
-        if args["street_address"]:
-            hotel.street_address = request.json["street_address"]
-        if args["city"]:
-            hotel.city = request.json["city"]
-        if args["state"]:
-            hotel.state = request.json["state"]
-        if args["zipcode"]:
-            hotel.zipcode = request.json["zipcode"]
-        if args["phone_number"]:
-            hotel.phone_number = request.json["phone_number"]
-        if args["weekend_diff_percentage"]:
-            hotel.weekend_diff_percentage = request.json["weekend_diff_percentage"]
-        if args["amenities"]:
-            amenities = request.json["amenities"]
-            # check to see if the amenities are valid
-            for amenity in amenities:
-                if amenity not in valid_amenities:
-                    abort(400, description = f"Amenity ({amenity}) is not valid.")
-            # get the values
-            has_pool, has_gym, has_spa, has_bus, has_wifi = generate_hotel_amenities(amenities)
-            # update the hotel with the new values
-            hotel.Pool = has_pool
-            hotel.Gym = has_gym
-            hotel.Spa = has_spa
-            hotel.Bussiness_Office = has_bus
-            hotel.Wifi = has_wifi
-        if args["room_types"]:
-            room_types = request.json["room_types"]
-            for room in room_types:
-                # check to see if the room types are valid
-                for key, value in room.items():
-                    if key not in valid_room_types:
-                        abort(400, description = f"Room type ({key}) is not valid.")
-            # get the values
-            standard_count, standard_price, queen_count, queen_price, king_count, king_price = generate_hotel_room_type(room_types)
-            # update the hotel with the new values if they got changed
-            if standard_count != -1:
-                hotel.standard_count = standard_count
-            if standard_price != -1:
-                hotel.standard_price = standard_price
-            if queen_count != -1:
-                hotel.queen_count = queen_count
-            if queen_price != -1:
-                hotel.queen_price = queen_price
-            if king_count != -1:
-                hotel.king_count = king_count
-            if king_price != -1:
-                hotel.king_price = king_price
-        
-        # commit the changes to the database
-        try:
-            session.commit()
-        except sq.exc.DBAPIError as e:
-            session.rollback()
-            abort(500, description = "The database server is offline.")
-
-        # then return the new hotel
-        try:
-            hotels = session.query(Hotel).filter(Hotel.hotel_id == hotel_id).all()
-        except sq.exc.DBAPIError as e:
-            session.rollback()
-            abort(500, description = "The database server is offline.")
-        
-        # generate a list from hotels
-        result = generate_hotel_entry(hotels)
-        
-        # if there are no hotels, show error
-        if not result:
-            abort(404, description  = f"Hotel ID {hotel_id} does not exist in the database.")
-        
-        # return the result
-        return result[0]
+            # if there is no instance that matches the ID, show error message
+            if not hotel:
+                abort(404, description  = f"Hotel ID {hotel_id} does not exist in the database.")
+            
+            # check to see which arguments have values
+            if args["hotel_name"]:
+                hotel.hotel_name = request.json["hotel_name"]
+            if args["street_address"]:
+                hotel.street_address = request.json["street_address"]
+            if args["city"]:
+                hotel.city = request.json["city"]
+            if args["state"]:
+                hotel.state = request.json["state"]
+            if args["zipcode"]:
+                hotel.zipcode = request.json["zipcode"]
+            if args["phone_number"]:
+                hotel.phone_number = request.json["phone_number"]
+            if args["weekend_diff_percentage"]:
+                hotel.weekend_diff_percentage = request.json["weekend_diff_percentage"]
+            if args["amenities"]:
+                amenities = request.json["amenities"]
+                # check to see if the amenities are valid
+                for amenity in amenities:
+                    if amenity not in valid_amenities:
+                        abort(400, description = f"Amenity ({amenity}) is not valid.")
+                # get the values
+                has_pool, has_gym, has_spa, has_bus, has_wifi = generate_hotel_amenities(amenities)
+                # update the hotel with the new values
+                hotel.Pool = has_pool
+                hotel.Gym = has_gym
+                hotel.Spa = has_spa
+                hotel.Bussiness_Office = has_bus
+                hotel.Wifi = has_wifi
+            if args["room_types"]:
+                room_types = request.json["room_types"]
+                for room in room_types:
+                    # check to see if the room types are valid
+                    for key, value in room.items():
+                        if key not in valid_room_types:
+                            abort(400, description = f"Room type ({key}) is not valid.")
+                # get the values
+                standard_count, standard_price, queen_count, queen_price, king_count, king_price = generate_hotel_room_type(room_types)
+                # update the hotel with the new values if they got changed
+                if standard_count != -1:
+                    hotel.standard_count = standard_count
+                if standard_price != -1:
+                    hotel.standard_price = standard_price
+                if queen_count != -1:
+                    hotel.queen_count = queen_count
+                if queen_price != -1:
+                    hotel.queen_price = queen_price
+                if king_count != -1:
+                    hotel.king_count = king_count
+                if king_price != -1:
+                    hotel.king_price = king_price
+            
+            # commit the changes to the database
+            try:
+                session.commit()
+            except sq.exc.DBAPIError as e:
+                session.rollback()
+                abort(500, description = "The database server is offline.")
+            else:
+                # then return the new hotel
+                try:
+                    hotels = session.query(Hotel).filter(Hotel.hotel_id == hotel_id).all()
+                except sq.exc.DBAPIError as e:
+                    session.rollback()
+                    abort(500, description = "The database server is offline.")
+                else:
+                    # generate a list from hotels
+                    result = generate_hotel_entry(hotels)
+                    
+                    # if there are no hotels, show error
+                    if not result:
+                        abort(404, description  = f"Hotel ID {hotel_id} does not exist in the database.")
+                    
+                    # return the result
+                    return result[0]
     
     # function to delete a single hotel from the database by ID number
     def delete(self, hotel_id):
@@ -526,21 +527,21 @@ class SingleHotel(Resource):
         except sq.exc.DBAPIError as e:
             session.rollback()
             abort(500, description = "The database server is offline.")
-        
-        # if there is no instance that matches the ID, show error message
-        if not result:
-            abort(404, description  = f"Hotel ID {hotel_id} does not exist in the database.")
-        
-        # delete the hotel and commit
-        try:
-            session.delete(result)
-            session.commit()
-        except sq.exc.DBAPIError as e:
-            session.rollback()
-            abort(500, description = "The database server is offline.")
-
-        # return message on success
-        return {"message": f"Hotel ID {hotel_id} was successfully deleted."}
+        else:
+            # if there is no instance that matches the ID, show error message
+            if not result:
+                abort(404, description  = f"Hotel ID {hotel_id} does not exist in the database.")
+            
+            # delete the hotel and commit
+            try:
+                session.delete(result)
+                session.commit()
+            except sq.exc.DBAPIError as e:
+                session.rollback()
+                abort(500, description = "The database server is offline.")
+            else:
+                # return message on success
+                return {"message": f"Hotel ID {hotel_id} was successfully deleted."}
     
     # function to get a single hotel from the database by ID number
     def get(self, hotel_id):
@@ -550,16 +551,16 @@ class SingleHotel(Resource):
         except sq.exc.DBAPIError as e:
             session.rollback()
             abort(500, description = "The database server is offline.")
-        # generate a list from hotels
-        result = generate_hotel_entry(hotels)
-        
-        # if there are no hotels, show error
-        if not result:
-            abort(404, description  = f"Hotel ID {hotel_id} does not exist in the database.")
-        
-        # return the result
-        return result[0]
-
+        else:
+            # generate a list from hotels
+            result = generate_hotel_entry(hotels)
+            
+            # if there are no hotels, show error
+            if not result:
+                abort(404, description  = f"Hotel ID {hotel_id} does not exist in the database.")
+            
+            # return the result
+            return result[0]
 
 # add to each class to API
 api.add_resource(SingleHotel, "/api/hotels/<int:hotel_id>")
