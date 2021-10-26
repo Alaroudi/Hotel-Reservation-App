@@ -24,15 +24,15 @@ hotel_post_args.add_argument("room_types", type = list, help = "Enter the room t
 
 # set up request parser for PUT
 hotel_put_args = reqparse.RequestParser()
-hotel_post_args.add_argument("hotel_name", type = str, help = "Enter the name of the hotel. (string)")
-hotel_post_args.add_argument("street_address", type = str, help = "Enter the street address of the hotel. (string)")
-hotel_post_args.add_argument("city", type = str, help = "Enter the city of the hotel. (string)")
-hotel_post_args.add_argument("state", type = str, help = "Enter the state of the hotel. (2-character string)")
-hotel_post_args.add_argument("zipcode", type = int, help = "Enter the zipcode of the hotel. (5-digit int)")
-hotel_post_args.add_argument("phone_number", type = str, help = "Enter phone number name of the hotel. (string)")
-hotel_post_args.add_argument("weekend_diff_percentage", type = float, help = "Enter the price differential for the weekend of the hotel. (decimal number)")
-hotel_post_args.add_argument("amenities", type = list, help = "Enter the amenities of the hotel. (list of strings)")
-hotel_post_args.add_argument("room_types", type = list, help = "Enter the room type data of the hotel. (list of dictionaries)")
+hotel_put_args.add_argument("hotel_name", type = str, help = "Enter the name of the hotel. (string)")
+hotel_put_args.add_argument("street_address", type = str, help = "Enter the street address of the hotel. (string)")
+hotel_put_args.add_argument("city", type = str, help = "Enter the city of the hotel. (string)")
+hotel_put_args.add_argument("state", type = str, help = "Enter the state of the hotel. (2-character string)")
+hotel_put_args.add_argument("zipcode", type = int, help = "Enter the zipcode of the hotel. (5-digit int)")
+hotel_put_args.add_argument("phone_number", type = str, help = "Enter phone number name of the hotel. (string)")
+hotel_put_args.add_argument("weekend_diff_percentage", type = float, help = "Enter the price differential for the weekend of the hotel. (decimal number)")
+hotel_put_args.add_argument("amenities", type = list, help = "Enter the amenities of the hotel. (list of strings)")
+hotel_put_args.add_argument("room_types", type = list, help = "Enter the room type data of the hotel. (list of dictionaries)")
 
 
 # set up list for valid amenities
@@ -114,23 +114,41 @@ def generate_hotel_amenities(amenities):
     # return all the values
     return (has_pool, has_gym, has_spa, has_bus, has_wifi)
 
-## funciton to set up the room_type variables for the Hotel class
+## function to set up the room_type variables for the Hotel class
 # returns a set of variables for the room_type: its count and its price
 def generate_hotel_room_type(room_types):
+    standard_count = 0
+    standard_price = 0
+    queen_count = 0
+    queen_price = 0
+    king_count = 0
+    king_price = 0
     # go through the list and store the values of each variable
     for room in room_types:
         # values for standard rooms
         if "Standard" in room:
-            standard_count = room["Standard"]["count"]
-            standard_price = room["Standard"]["price"]
+            for room_type, inner in room.items():
+                for key, value in inner.items():
+                    if key == "count":
+                        standard_count = room["Standard"]["count"]
+                    if key == "price":
+                        standard_price = room["Standard"]["price"]
         # values for queen rooms
         if "Queen" in room:
-            queen_count = room["Queen"]["count"]
-            queen_price = room["Queen"]["price"]
+            for room_type, inner in room.items():
+                for key, value in inner.items():
+                    if key == "count":
+                        queen_count = room["Queen"]["count"]
+                    if key == "price":
+                        queen_price = room["Queen"]["price"]
         # values for king rooms
         if "King" in room:
-            king_count = room["King"]["count"]
-            king_price = room["King"]["price"]
+            for room_type, inner in room.items():
+                for key, value in inner.items():
+                    if key == "count":
+                        king_count = room["King"]["count"]
+                    if key == "price":
+                        king_price = room["King"]["price"]
     return (standard_count, standard_price, queen_count, queen_price, king_count, king_price)
 
 ## function to set up room_types list
@@ -439,12 +457,18 @@ class SingleHotel(Resource):
             # get the values
             standard_count, standard_price, queen_count, queen_price, king_count, king_price = generate_hotel_room_type(room_types)
             # update the hotel with the new values
-            hotel.standard_count = standard_count
-            hotel.standard_price = standard_price
-            hotel.queen_count = queen_count
-            hotel.queen_price = queen_price
-            hotel.king_count = king_count
-            hotel.king_price = king_price
+            if standard_count:
+                hotel.standard_count = standard_count
+            if standard_price:
+                hotel.standard_price = standard_price
+            if queen_count:
+                hotel.queen_count = queen_count
+            if queen_price:
+                hotel.queen_price = queen_price
+            if king_count:
+                hotel.king_count = king_count
+            if king_price:
+                hotel.king_price = king_price
         
         # commit the changes to the database
         session.commit()
