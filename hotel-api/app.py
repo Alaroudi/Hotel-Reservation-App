@@ -1,6 +1,6 @@
 from database import *
 from flask import Flask, request, abort, jsonify
-from flask_restful import Api, Resource
+from flask_restful import Api, Resource, reqparse
 from sqlalchemy.orm import sessionmaker
 from sqlacodegen.codegen import CodeGenerator
 import dotenv
@@ -8,6 +8,24 @@ import io
 import os
 import sqlalchemy as sq
 import sys
+
+# set up request parser for PUT
+hotel_put_args = reqparse.RequestParser()
+hotel_put_args.add_argument("hotel_name", type = str, help = "Enter the name of the hotel.")
+hotel_put_args.add_argument("street_address", type = str, help = "Enter the street address of the hotel.")
+hotel_put_args.add_argument("city", type = str, help = "Enter the city of the hotel.")
+hotel_put_args.add_argument("state", type = str, help = "Enter the state of the hotel.")
+hotel_put_args.add_argument("zipcode", type = int, help = "Enter the zipcode of the hotel.")
+hotel_put_args.add_argument("phone_number", type = str, help = "Enter phone number name of the hotel.")
+hotel_put_args.add_argument("weekend_diff_percentage", type = float, help = "Enter the price differential for the weekend of the hotel.")
+hotel_put_args.add_argument("amenities", type = list, help = "Enter the amenities (list of strings) of the hotel.")
+hotel_put_args.add_argument("room_types", type = list, help = "Enter the room type data (list of dictionaries) of the hotel.")
+
+# set up list for valid amenities
+valid_amenities = ["Pool", "Gym", "Spa", "Business Office", "Wifi"]
+
+# set up list for valid room_types
+valid_room_types = ["Standard", "Queen", "King"]
 
 # global variable to set up session
 session = None
@@ -54,6 +72,53 @@ def generate_amenities(hotel):
     if hotel.Wifi:
         amenities.append("Wifi")
     return amenities
+
+## function to set up the amenity variables for the Hotel class
+# returns a set of variables for Pool, Gym, Spa, Business Office, and Wifi
+def generate_hotel_amenities(amenities):
+    has_pool = 0
+    has_gym = 0
+    has_spa = 0
+    has_bus = 0
+    has_wifi = 0
+    # go through the list and update each variable
+    for amenity in amenities:
+        # hotel has pool
+        if "Pool" in amenities:
+            has_pool = 1
+        # hotel has gym
+        if "Gym" in amenities:
+            has_gym = 1
+        # hotel has spa
+        if "Spa" in amenities:
+            has_spa = 1
+        # hotel has business office
+        if "Business Office" in amenities:
+            has_bus = 1
+        # hotel has wifi
+        if "Wifi" in amenities:
+            has_wifi = 1
+    # return all the values
+    return (has_pool, has_gym, has_spa, has_bus, has_wifi)
+
+## funciton to set up the room_type variables for the Hotel class
+# returns a set of variables for the room_type: its count and its price
+def generate_hotel_room_type(room_types):
+    # go through the list and store the values of each variable
+    for room in room_types:
+        # values for standard rooms
+        if "Standard" in room:
+            standard_count = room["Standard"]["count"]
+            standard_price = room["Standard"]["price"]
+        # values for queen rooms
+        if "Queen" in room:
+            queen_count = room["Queen"]["count"]
+            queen_price = room["Queen"]["price"]
+        # values for king rooms
+        if "King" in room:
+            king_count = room["King"]["count"]
+            king_price = room["King"]["price"]
+    return (standard_count, standard_price, queen_count, queen_price, king_count, king_price)
 
 ## function to set up room_types list
 # returns a list of dictionaries with the information of each room_type in them
@@ -128,25 +193,8 @@ def generate_rooms(hotel):
     ]
 }
 '''
-def generate_new_hotel():
-    # store each token into a variable
-    hotel_id = request.json["hotel_id"]
-    # check if this hotel_id is already in the database
-    result = session.query(Hotel).filter(Hotel.hotel_id == hotel_id).first()
-    if result:
-        # if it already exists, return the hotel_id
-        return hotel_id
-    # continue if it doesn't
-    hotel_name = request.json["hotel_name"]
-    street_address = request.json["street_address"]
-    city = request.json["city"]
-    state = request.json["state"]
-    zipcode = request.json["zipcode"]
-    phone_number = request.json["phone_number"]
-    number_of_rooms = request.json["number_of_rooms"]
-    weekend_diff_percentage = request.json["weekend_diff_percentage"]
+def generate_new_hotel(hotel_id, hotel_name, street_address, city, state, zipcode, phone_number, weekend_diff_percentage, amenities, room_types):
     # extract data from the list received from amenities
-    amenities = request.json["amenities"]
     has_pool = 0
     has_gym = 0
     has_spa = 0
@@ -169,8 +217,7 @@ def generate_new_hotel():
         if amenity == "Wifi":
             has_wifi = 1
     # extract data from the list received from room_types
-    rooms = request.json["room_types"]
-    for room in rooms:
+    for room in room_types:
         if "Standard" in room:
             standard_count = room["Standard"]["count"]
             standard_price = room["Standard"]["price"]
@@ -180,10 +227,6 @@ def generate_new_hotel():
         if "King" in room:
             king_count = room["King"]["count"]
             king_price = room["King"]["price"]
-    
-    # check if the number of rooms matches the total of all the room types
-    if number_of_rooms != (standard_count + queen_count + king_count):
-        abort(403, description = "The number of rooms does not match the total in room_types.")
 
     # create a new Hotel object from the information provided
     new_hotel = Hotel(hotel_id = hotel_id, hotel_name = hotel_name, street_address = street_address, city = city, state = state, zipcode = zipcode, 
@@ -283,29 +326,126 @@ class AllHotels(Resource):
         # if there are no hotels, show error
         if not result:
             abort(404, description  = "There are no hotels in the database.")
+        
         # return the results
         return result
 
     # function to add a new hotel to the database
     def post(self):
-        # generate the new Hotel object
-        new_hotel = generate_new_hotel()
+        # store each token into a variable
+        hotel_id = request.json["hotel_id"]
+        # check if this hotel_id is already in the database
+        result = session.query(Hotel).filter(Hotel.hotel_id == hotel_id).first()
+        if result:
+            # if it already exists, show error message
+            abort(409, f"Hotel ID {hotel_id} already exists in the database.")
+        hotel_name = request.json["hotel_name"]
+        street_address = request.json["street_address"]
+        city = request.json["city"]
+        state = request.json["state"]
+        zipcode = request.json["zipcode"]
+        phone_number = request.json["phone_number"]
+        number_of_rooms = request.json["number_of_rooms"]
+        weekend_diff_percentage = request.json["weekend_diff_percentage"]
+        amenities = request.json["amenities"]
+        room_types = request.json["room_types"]
+
+        # check to see if the number_of_rooms matches the total from room_types
+        for room in room_types:
+            if "Standard" in room:
+                standard_count = room["Standard"]["count"]
+            if "Queen" in room:
+                queen_count = room["Queen"]["count"]
+            if "King" in room:
+                king_count = room["King"]["count"]
+        if number_of_rooms != (standard_count + queen_count + king_count):
+            abort(403, description = "The number of rooms does not match the total in room_types.")
         
-        # if new_hotel is an int, the hotel already exists
-        if isinstance(new_hotel, int):
-            abort(409, f"Hotel ID {new_hotel} already exists in the database.")
+        # generate the new Hotel object
+        new_hotel = generate_new_hotel(hotel_id, hotel_name, street_address, city, state, zipcode, phone_number, weekend_diff_percentage, amenities, room_types)
         
         # add and commit the new hotel to database
         session.add(new_hotel)
         session.commit()
+
         # return success message
         return {"message": f"Hotel ID {new_hotel.hotel_id} was successfully added to the database."}
-
-## TODO: PUT for SingleHotel
 
 # class for interacting with one hotel in the database
 class SingleHotel(Resource):
 
+    # function to update information for a single hotel from the database by ID number
+    def put(self, hotel_id):
+        # select the correct instance
+        hotel = session.query(Hotel).get(hotel_id)
+        # get the args from the request
+        args = hotel_put_args.parse_args()
+
+        # if there is no instance that matches the ID, show error message
+        if not hotel:
+            abort(404, description  = f"Hotel ID {hotel_id} does not exist in the database.")
+        
+        # check to see which arguments have values
+        if args["hotel_name"]:
+            hotel.hotel_name = request.json["hotel_name"]
+        if args["street_address"]:
+            hotel.street_address = request.json["street_address"]
+        if args["city"]:
+            hotel.city = request.json["city"]
+        if args["state"]:
+            hotel.state = request.json["state"]
+        if args["zipcode"]:
+            hotel.zipcode = request.json["zipcode"]
+        if args["phone_number"]:
+            hotel.phone_number = request.json["phone_number"]
+        if args["weekend_diff_percentage"]:
+            hotel.weekend_diff_percentage = request.json["weekend_diff_percentage"]
+        if args["amenities"]:
+            amenities = request.json["amenities"]
+            # check to see if the amenities are valid
+            for amenity in amenities:
+                if amenity not in valid_amenities:
+                    abort(403, description = f"Amenity ({amenity}) is not valid.")
+            # get the values
+            has_pool, has_gym, has_spa, has_bus, has_wifi = generate_hotel_amenities(amenities)
+            # update the hotel with the new values
+            hotel.Pool = has_pool
+            hotel.Gym = has_gym
+            hotel.Spa = has_spa
+            hotel.Bussiness_Office = has_bus
+            hotel.Wifi = has_wifi
+        if args["room_types"]:
+            room_types = request.json["room_types"]
+            for room in room_types:
+                # check to see if the room types are valid
+                for key, value in room.items():
+                    if key not in valid_room_types:
+                        abort(403, description = f"Room type ({key}) is not valid.")
+            # get the values
+            standard_count, standard_price, queen_count, queen_price, king_count, king_price = generate_hotel_room_type(room_types)
+            # update the hotel with the new values
+            hotel.standard_count = standard_count
+            hotel.standard_price = standard_price
+            hotel.queen_count = queen_count
+            hotel.queen_price = queen_price
+            hotel.king_count = king_count
+            hotel.king_price = king_price
+        
+        # commit the changes to the database
+        session.commit()
+
+        # then return the new hotel
+        hotels = session.query(Hotel).filter(Hotel.hotel_id == hotel_id).all()
+        # generate a list from hotels
+        result = generate_hotel_entry(hotels)
+        
+        # if there are no hotels, show error
+        if not result:
+            abort(404, description  = f"Hotel ID {hotel_id} does not exist in the database.")
+        
+        # return the result
+        return result[0]
+    
     # function to delete a single hotel from the database by ID number
     def delete(self, hotel_id):
         # select the correct instance
@@ -349,6 +489,6 @@ if __name__ == "__main__":
     username = os.getenv("user")
     password = os.getenv("password")
     database = os.getenv("database")
-    # generate model and output to db.py
+    # generate model and output to database.py
     generate_model(host, username, password, database, "database.py")
     app.run(debug = True)
