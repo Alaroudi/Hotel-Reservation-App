@@ -82,22 +82,21 @@ def generate_hotel_amenities(amenities):
     has_bus = 0
     has_wifi = 0
     # go through the list and update each variable
-    for amenity in amenities:
-        # hotel has pool
-        if "Pool" in amenities:
-            has_pool = 1
-        # hotel has gym
-        if "Gym" in amenities:
-            has_gym = 1
-        # hotel has spa
-        if "Spa" in amenities:
-            has_spa = 1
-        # hotel has business office
-        if "Business Office" in amenities:
-            has_bus = 1
-        # hotel has wifi
-        if "Wifi" in amenities:
-            has_wifi = 1
+    # hotel has pool
+    if "Pool" in amenities:
+        has_pool = 1
+    # hotel has gym
+    if "Gym" in amenities:
+        has_gym = 1
+    # hotel has spa
+    if "Spa" in amenities:
+        has_spa = 1
+    # hotel has business office
+    if "Business Office" in amenities:
+        has_bus = 1
+    # hotel has wifi
+    if "Wifi" in amenities:
+        has_wifi = 1
     # return all the values
     return (has_pool, has_gym, has_spa, has_bus, has_wifi)
 
