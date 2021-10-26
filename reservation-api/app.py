@@ -382,9 +382,31 @@ class SingleHotel(Resource):
         return result[0]
 
 
+class SingleBooking(Resource):
+    # function to delete a single hotel from the database by ID number
+    def delete(self, reservation_id):
+        result = session.query(Reservation).get(reservation_id)
+        if not result:
+            abort(
+                404,
+                description=
+                f"Reservation ID {reservation_id} does not exist in the database."
+            )
+
+        session.delete(result)
+        session.commit()
+
+        # return message on success
+        return {
+            "message":
+            f"Reservation ID {reservation_id} was successfully deleted."
+        }
+
+
 # add to each class to API
 api.add_resource(SingleHotel, "/api/hotels/<int:hotel_id>")
 api.add_resource(AllHotels, "/api/hotels")
+api.add_resource(SingleBooking, "/api/bookings/<int:reservation_id>")
 
 if __name__ == "__main__":
     # load dotenv
