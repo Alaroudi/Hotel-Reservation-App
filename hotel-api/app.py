@@ -66,7 +66,6 @@ def generate_model(host, user, password, database, outfile = None):
         Session = sessionmaker(bind = engine)
         session = Session()
     except sq.exc.SQLAlchemyError as e:
-        session.rollback()
         abort(500, description = "The database is offline.")
 
 ## function to set up amenities list
@@ -415,8 +414,8 @@ class AllHotels(Resource):
         new_hotel = generate_new_hotel(hotel_name, street_address, city, state, zipcode, phone_number, weekend_diff_percentage, amenities, room_types)
         
         # add and commit the new hotel to database
-        session.add(new_hotel)
         try:
+            session.add(new_hotel)
             session.commit()
         except sq.exc.SQLAlchemyError as e:
             session.rollback()
@@ -533,8 +532,8 @@ class SingleHotel(Resource):
             abort(404, description  = f"Hotel ID {hotel_id} does not exist in the database.")
         
         # delete the hotel and commit
-        session.delete(result)
         try:
+            session.delete(result)
             session.commit()
         except sq.exc.SQLAlchemyError as e:
             session.rollback()
