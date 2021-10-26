@@ -11,7 +11,6 @@ import sys
 
 # set up request parser for POST
 hotel_post_args = reqparse.RequestParser()
-hotel_post_args.add_argument("hotel_id", type = int, help = "Enter the ID of the hotel. (int)", required = True)
 hotel_post_args.add_argument("hotel_name", type = str, help = "Enter the name of the hotel. (string)", required = True)
 hotel_post_args.add_argument("street_address", type = str, help = "Enter the street address of the hotel. (string)", required = True)
 hotel_post_args.add_argument("city", type = str, help = "Enter the city of the hotel. (string)", required = True)
@@ -53,18 +52,21 @@ def generate_model(host, user, password, database, outfile = None):
     global session
     
     # set up mysql engine
-    engine = sq.create_engine(f"mysql+pymysql://{user}:{password}@{host}/{database}")
-    metadata = sq.MetaData(bind = engine)
-    metadata.reflect()
-    # set up output file for database classes
-    outfile = io.open(outfile, "w", encoding = "utf-8") if outfile else sys.stdout
-    # generate code and output to outfile
-    generator = CodeGenerator(metadata)
-    generator.render(outfile)
-    
-    # generate session
-    Session = sessionmaker(bind = engine)
-    session = Session()
+    try:
+        engine = sq.create_engine(f"mysql+pymysql://{user}:{password}@{host}/{database}")
+        metadata = sq.MetaData(bind = engine)
+        metadata.reflect()
+        # set up output file for database classes
+        outfile = io.open(outfile, "w", encoding = "utf-8") if outfile else sys.stdout
+        # generate code and output to outfile
+        generator = CodeGenerator(metadata)
+        generator.render(outfile)
+        
+        # generate session
+        Session = sessionmaker(bind = engine)
+        session = Session()
+    except sq.exc.OperationalError:
+        abort(500, description = "The database is offline.")
 
 ## function to set up amenities list
 # returns a list of amenities that the hotel has
@@ -197,7 +199,6 @@ def generate_rooms(hotel):
 # expects input in this format:
 '''
 {
-    "hotel_id": 2,
     "hotel_name": "The Magnolia All Suites",
     "street_address": "14187 Commercial Trail",
     "city": "Hampton",
@@ -234,7 +235,7 @@ def generate_rooms(hotel):
     ]
 }
 '''
-def generate_new_hotel(hotel_id, hotel_name, street_address, city, state, zipcode, phone_number, weekend_diff_percentage, amenities, room_types):
+def generate_new_hotel(hotel_name, street_address, city, state, zipcode, phone_number, weekend_diff_percentage, amenities, room_types):
     # extract data from the list received from amenities
     has_pool = 0
     has_gym = 0
@@ -270,7 +271,7 @@ def generate_new_hotel(hotel_id, hotel_name, street_address, city, state, zipcod
             king_price = room["King"]["price"]
 
     # create a new Hotel object from the information provided
-    new_hotel = Hotel(hotel_id = hotel_id, hotel_name = hotel_name, street_address = street_address, city = city, state = state, zipcode = zipcode, 
+    new_hotel = Hotel(hotel_name = hotel_name, street_address = street_address, city = city, state = state, zipcode = zipcode, 
                       phone_number = phone_number, standard_count = standard_count, queen_count = queen_count, king_count = king_count,
                       standard_price = standard_price, queen_price = queen_price, king_price = king_price, Pool = has_pool, Gym = has_gym,
                       Spa = has_spa, Bussiness_Office = has_bus, Wifi = has_wifi, weekend_diff_percentage = weekend_diff_percentage)
@@ -360,7 +361,10 @@ class AllHotels(Resource):
     # function to get all hotels from the database
     def get(self):
         # query to get all hotels
-        hotels = session.query(Hotel).order_by(Hotel.hotel_id).all()
+        try:
+            hotels = session.query(Hotel).order_by(Hotel.hotel_id).all()
+        except sq.exc.OperationalError:
+            abort(500, description = "The database server is offline.")
         # generate a list from hotels
         result = generate_hotel_entry(hotels)
 
@@ -376,19 +380,21 @@ class AllHotels(Resource):
         # check to see if the required arguments are passed
         args = hotel_post_args.parse_args()
         # store each token into a variable
-        hotel_id = request.json["hotel_id"]
-        # check if this hotel_id is already in the database
-        result = session.query(Hotel).filter(Hotel.hotel_id == hotel_id).first()
-        if result:
-            # if it already exists, show error message
-            abort(409, f"Hotel ID {hotel_id} already exists in the database.")
         hotel_name = request.json["hotel_name"]
         street_address = request.json["street_address"]
+        # check if this hotel already exists in the database
+        try:
+            result = session.query(Hotel).filter((Hotel.hotel_name == hotel_name) & (Hotel.street_address == street_address)).first()
+        except sq.exc.OperationalError:
+            abort(500, description = "The database server is offline.")
+        
+        if result:
+            # if it already exists, show error message
+            abort(400, f"This hotel already exists in the database. (Hotel ID {result.hotel_id})")
         city = request.json["city"]
         state = request.json["state"]
         zipcode = request.json["zipcode"]
         phone_number = request.json["phone_number"]
-        number_of_rooms = request.json["number_of_rooms"]
         weekend_diff_percentage = request.json["weekend_diff_percentage"]
         amenities = request.json["amenities"]
         room_types = request.json["room_types"]
@@ -401,15 +407,16 @@ class AllHotels(Resource):
                 queen_count = room["Queen"]["count"]
             if "King" in room:
                 king_count = room["King"]["count"]
-        if number_of_rooms != (standard_count + queen_count + king_count):
-            abort(403, description = "The number of rooms does not match the total in room_types.")
         
         # generate the new Hotel object
-        new_hotel = generate_new_hotel(hotel_id, hotel_name, street_address, city, state, zipcode, phone_number, weekend_diff_percentage, amenities, room_types)
+        new_hotel = generate_new_hotel(hotel_name, street_address, city, state, zipcode, phone_number, weekend_diff_percentage, amenities, room_types)
         
         # add and commit the new hotel to database
         session.add(new_hotel)
-        session.commit()
+        try:
+            session.commit()
+        except sq.exc.OperationalError:
+            abort(500, description = "The database server is offline.")
 
         # return success message
         return {"message": f"Hotel ID {new_hotel.hotel_id} was successfully added to the database."}
@@ -420,7 +427,10 @@ class SingleHotel(Resource):
     # function to update information for a single hotel from the database by ID number
     def put(self, hotel_id):
         # select the correct instance
-        hotel = session.query(Hotel).get(hotel_id)
+        try:
+            hotel = session.query(Hotel).get(hotel_id)
+        except sq.exc.OperationalError:
+            abort(500, description = "The database server is offline.")
         # get the args from the request
         args = hotel_put_args.parse_args()
 
@@ -448,7 +458,7 @@ class SingleHotel(Resource):
             # check to see if the amenities are valid
             for amenity in amenities:
                 if amenity not in valid_amenities:
-                    abort(403, description = f"Amenity ({amenity}) is not valid.")
+                    abort(400, description = f"Amenity ({amenity}) is not valid.")
             # get the values
             has_pool, has_gym, has_spa, has_bus, has_wifi = generate_hotel_amenities(amenities)
             # update the hotel with the new values
@@ -463,7 +473,7 @@ class SingleHotel(Resource):
                 # check to see if the room types are valid
                 for key, value in room.items():
                     if key not in valid_room_types:
-                        abort(403, description = f"Room type ({key}) is not valid.")
+                        abort(400, description = f"Room type ({key}) is not valid.")
             # get the values
             standard_count, standard_price, queen_count, queen_price, king_count, king_price = generate_hotel_room_type(room_types)
             # update the hotel with the new values if they got changed
@@ -481,10 +491,17 @@ class SingleHotel(Resource):
                 hotel.king_price = king_price
         
         # commit the changes to the database
-        session.commit()
+        try:
+            session.commit()
+        except sq.exc.OperationalError:
+            abort(500, description = "The database server is offline.")
 
         # then return the new hotel
-        hotels = session.query(Hotel).filter(Hotel.hotel_id == hotel_id).all()
+        try:
+            hotels = session.query(Hotel).filter(Hotel.hotel_id == hotel_id).all()
+        except sq.exc.OperationalError:
+            abort(500, description = "The database server is offline.")
+        
         # generate a list from hotels
         result = generate_hotel_entry(hotels)
         
@@ -498,7 +515,10 @@ class SingleHotel(Resource):
     # function to delete a single hotel from the database by ID number
     def delete(self, hotel_id):
         # select the correct instance
-        result = session.query(Hotel).get(hotel_id)
+        try:
+            result = session.query(Hotel).get(hotel_id)
+        except sq.exc.OperationalError:
+            abort(500, description = "The database server is offline.")
         
         # if there is no instance that matches the ID, show error message
         if not result:
@@ -506,7 +526,10 @@ class SingleHotel(Resource):
         
         # delete the hotel and commit
         session.delete(result)
-        session.commit()
+        try:
+            session.commit()
+        except sq.exc.OperationalError:
+            abort(500, description = "The database server is offline.")
 
         # return message on success
         return {"message": f"Hotel ID {hotel_id} was successfully deleted."}
@@ -514,7 +537,10 @@ class SingleHotel(Resource):
     # function to get a single hotel from the database by ID number
     def get(self, hotel_id):
         # query to get the hotel and filter by hotel number
-        hotels = session.query(Hotel).filter(Hotel.hotel_id == hotel_id).all()
+        try:
+            hotels = session.query(Hotel).filter(Hotel.hotel_id == hotel_id).all()
+        except sq.exc.OperationalError:
+            abort(500, description = "The database server is offline.")
         # generate a list from hotels
         result = generate_hotel_entry(hotels)
         
