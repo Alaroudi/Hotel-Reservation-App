@@ -117,38 +117,48 @@ def generate_hotel_amenities(amenities):
 ## function to set up the room_type variables for the Hotel class
 # returns a set of variables for the room_type: its count and its price
 def generate_hotel_room_type(room_types):
-    standard_count = 0
-    standard_price = 0
-    queen_count = 0
-    queen_price = 0
-    king_count = 0
-    king_price = 0
+    standard_count = -1
+    standard_price = -1
+    queen_count = -1
+    queen_price = -1
+    king_count = -1
+    king_price = -1
     # go through the list and store the values of each variable
     for room in room_types:
         # values for standard rooms
         if "Standard" in room:
+            # check to see what values are being updated
             for room_type, inner in room.items():
                 for key, value in inner.items():
+                    # if count is being updated, store the value
                     if key == "count":
                         standard_count = room["Standard"]["count"]
+                    # if price is being updated, store the value
                     if key == "price":
                         standard_price = room["Standard"]["price"]
         # values for queen rooms
         if "Queen" in room:
+            # check to see what values are being updated
             for room_type, inner in room.items():
                 for key, value in inner.items():
+                    # if count is being updated, store the value
                     if key == "count":
                         queen_count = room["Queen"]["count"]
+                    # if price is being updated, store the value
                     if key == "price":
                         queen_price = room["Queen"]["price"]
         # values for king rooms
         if "King" in room:
+            # check to see what values are being updated
             for room_type, inner in room.items():
                 for key, value in inner.items():
+                    # if count is being updated, store the value
                     if key == "count":
                         king_count = room["King"]["count"]
+                    # if price is being updated, store the value
                     if key == "price":
                         king_price = room["King"]["price"]
+    # return all the values
     return (standard_count, standard_price, queen_count, queen_price, king_count, king_price)
 
 ## function to set up room_types list
@@ -456,18 +466,18 @@ class SingleHotel(Resource):
                         abort(403, description = f"Room type ({key}) is not valid.")
             # get the values
             standard_count, standard_price, queen_count, queen_price, king_count, king_price = generate_hotel_room_type(room_types)
-            # update the hotel with the new values
-            if standard_count:
+            # update the hotel with the new values if they got changed
+            if standard_count != -1:
                 hotel.standard_count = standard_count
-            if standard_price:
+            if standard_price != -1:
                 hotel.standard_price = standard_price
-            if queen_count:
+            if queen_count != -1:
                 hotel.queen_count = queen_count
-            if queen_price:
+            if queen_price != -1:
                 hotel.queen_price = queen_price
-            if king_count:
+            if king_count != -1:
                 hotel.king_count = king_count
-            if king_price:
+            if king_price != -1:
                 hotel.king_price = king_price
         
         # commit the changes to the database
