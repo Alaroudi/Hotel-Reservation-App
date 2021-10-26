@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
@@ -12,6 +11,11 @@ import LoginIcon from "@mui/icons-material/Login";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LockIcon from "@mui/icons-material/Lock";
 import "./SignIn.css";
+import auth from "../services/authService";
+import Alert from "@mui/material/Alert";
+import { Redirect } from "react-router";
+import LoadingButton from "@mui/lab/LoadingButton";
+
 const SignIn = () => {
   const [values, setValues] = useState({
     email: "",
@@ -19,14 +23,31 @@ const SignIn = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
 
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const handleChange = event => {
     setValues({ ...values, [event.target.id]: event.target.value });
   };
 
   // TODO: Call User API
-  const handleSubmit = event => {
+  const handleSubmit = async event => {
     event.preventDefault();
+    setLoading(false);
+    setError("");
+    try {
+      setLoading(true);
+      await auth.login(values.email, values.password);
+      window.location = "/";
+    } catch (ex) {
+      if (ex.response && ex.response.status === 400) {
+        setError(ex.response.data);
+      }
+    }
+    setLoading(false);
   };
+
+  if (auth.getCurrentUser()) return <Redirect to="/" />;
 
   return (
     <div className="signin-container">
@@ -44,6 +65,11 @@ const SignIn = () => {
               "& > :not(style)": { mb: 3 }
             }}
           >
+            {error && (
+              <Alert className="grid-span" severity="error">
+                {error}
+              </Alert>
+            )}
             <TextField
               variant="outlined"
               label="Email"
@@ -92,15 +118,17 @@ const SignIn = () => {
             <Link to="/signup" className="link">
               Create Account
             </Link>
-            <Button
+            <LoadingButton
+              loading={loading}
               variant="contained"
               type="submit"
               size="large"
+              loadingPosition="end"
               endIcon={<LoginIcon />}
               sx={{ borderRadius: "20px", mt: "1rem" }}
             >
               Sign in
-            </Button>
+            </LoadingButton>
           </Box>
         </div>
         <div>

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Link, useHistory } from "react-router-dom";
 import "./NavBar.css";
 
-const NavBar = () => {
+const NavBar = ({ user }) => {
   const [toggle, setToggle] = useState(false);
   const history = useHistory();
   return (
@@ -19,24 +19,37 @@ const NavBar = () => {
       </IconButton>
 
       <ul className="list nav__list collapsible__content ">
-        <li className="nav__item" onClick={() => history.push("/signin")}>
-          Sign in
-        </li>
-
-        <li className="nav__item" onClick={() => history.push("/profile")}>
-          Profile
-        </li>
-        <li className="nav__item" onClick={() => history.push("/reservations")}>
-          My Reservations
-        </li>
-
-        <li className="nav__item" onClick={() => history.push("/admin")}>
-          Admin
-        </li>
-
-        <li className="nav__item" onClick={() => history.push("/logout")}>
-          Logout
-        </li>
+        {!user && (
+          <>
+            <li className="nav__item" onClick={() => history.push("/signin")}>
+              Sign in
+            </li>
+            <li className="nav__item" onClick={() => history.push("/signup")}>
+              Register
+            </li>
+          </>
+        )}
+        {user && (
+          <>
+            <li className="nav__item" onClick={() => history.push("/profile")}>
+              Profile
+            </li>
+            <li
+              className="nav__item"
+              onClick={() => history.push("/reservations")}
+            >
+              My Reservations
+            </li>
+            {user.isAdmin && (
+              <li className="nav__item" onClick={() => history.push("/admin")}>
+                Admin
+              </li>
+            )}
+            <li className="nav__item" onClick={() => history.push("/logout")}>
+              Logout
+            </li>
+          </>
+        )}
       </ul>
     </nav>
   );
