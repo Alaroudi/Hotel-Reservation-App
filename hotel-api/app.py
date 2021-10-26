@@ -9,17 +9,31 @@ import os
 import sqlalchemy as sq
 import sys
 
+# set up request parser for POST
+hotel_post_args = reqparse.RequestParser()
+hotel_post_args.add_argument("hotel_id", type = int, help = "Enter the ID of the hotel. (int)", required = True)
+hotel_post_args.add_argument("hotel_name", type = str, help = "Enter the name of the hotel. (string)", required = True)
+hotel_post_args.add_argument("street_address", type = str, help = "Enter the street address of the hotel. (string)", required = True)
+hotel_post_args.add_argument("city", type = str, help = "Enter the city of the hotel. (string)", required = True)
+hotel_post_args.add_argument("state", type = str, help = "Enter the state of the hotel. (2-character string)", required = True)
+hotel_post_args.add_argument("zipcode", type = int, help = "Enter the zipcode of the hotel. (5-digit int)", required = True)
+hotel_post_args.add_argument("phone_number", type = str, help = "Enter phone number name of the hotel. (string)", required = True)
+hotel_post_args.add_argument("weekend_diff_percentage", type = float, help = "Enter the price differential for the weekend of the hotel. (decimal number)", required = True)
+hotel_post_args.add_argument("amenities", type = list, help = "Enter the amenities of the hotel. (list of strings)", required = True)
+hotel_post_args.add_argument("room_types", type = list, help = "Enter the room type data of the hotel. (list of dictionaries)", required = True)
+
 # set up request parser for PUT
 hotel_put_args = reqparse.RequestParser()
-hotel_put_args.add_argument("hotel_name", type = str, help = "Enter the name of the hotel.")
-hotel_put_args.add_argument("street_address", type = str, help = "Enter the street address of the hotel.")
-hotel_put_args.add_argument("city", type = str, help = "Enter the city of the hotel.")
-hotel_put_args.add_argument("state", type = str, help = "Enter the state of the hotel.")
-hotel_put_args.add_argument("zipcode", type = int, help = "Enter the zipcode of the hotel.")
-hotel_put_args.add_argument("phone_number", type = str, help = "Enter phone number name of the hotel.")
-hotel_put_args.add_argument("weekend_diff_percentage", type = float, help = "Enter the price differential for the weekend of the hotel.")
-hotel_put_args.add_argument("amenities", type = list, help = "Enter the amenities (list of strings) of the hotel.")
-hotel_put_args.add_argument("room_types", type = list, help = "Enter the room type data (list of dictionaries) of the hotel.")
+hotel_post_args.add_argument("hotel_name", type = str, help = "Enter the name of the hotel. (string)")
+hotel_post_args.add_argument("street_address", type = str, help = "Enter the street address of the hotel. (string)")
+hotel_post_args.add_argument("city", type = str, help = "Enter the city of the hotel. (string)")
+hotel_post_args.add_argument("state", type = str, help = "Enter the state of the hotel. (2-character string)")
+hotel_post_args.add_argument("zipcode", type = int, help = "Enter the zipcode of the hotel. (5-digit int)")
+hotel_post_args.add_argument("phone_number", type = str, help = "Enter phone number name of the hotel. (string)")
+hotel_post_args.add_argument("weekend_diff_percentage", type = float, help = "Enter the price differential for the weekend of the hotel. (decimal number)")
+hotel_post_args.add_argument("amenities", type = list, help = "Enter the amenities of the hotel. (list of strings)")
+hotel_post_args.add_argument("room_types", type = list, help = "Enter the room type data of the hotel. (list of dictionaries)")
+
 
 # set up list for valid amenities
 valid_amenities = ["Pool", "Gym", "Spa", "Business Office", "Wifi"]
@@ -331,6 +345,8 @@ class AllHotels(Resource):
 
     # function to add a new hotel to the database
     def post(self):
+        # check to see if the required arguments are passed
+        args = hotel_post_args.parse_args()
         # store each token into a variable
         hotel_id = request.json["hotel_id"]
         # check if this hotel_id is already in the database
