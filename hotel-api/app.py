@@ -65,7 +65,8 @@ def generate_model(host, user, password, database, outfile = None):
         # generate session
         Session = sessionmaker(bind = engine)
         session = Session()
-    except sq.exc.OperationalError:
+    except sq.exc.SQLAlchemyError as e:
+        session.rollback()
         abort(500, description = "The database is offline.")
 
 ## function to set up amenities list
@@ -363,7 +364,8 @@ class AllHotels(Resource):
         # query to get all hotels
         try:
             hotels = session.query(Hotel).order_by(Hotel.hotel_id).all()
-        except sq.exc.OperationalError:
+        except sq.exc.SQLAlchemyError as e:
+            session.rollback()
             abort(500, description = "The database server is offline.")
         # generate a list from hotels
         result = generate_hotel_entry(hotels)
@@ -385,7 +387,8 @@ class AllHotels(Resource):
         # check if this hotel already exists in the database
         try:
             result = session.query(Hotel).filter((Hotel.hotel_name == hotel_name) & (Hotel.street_address == street_address)).first()
-        except sq.exc.OperationalError:
+        except sq.exc.SQLAlchemyError as e:
+            session.rollback()
             abort(500, description = "The database server is offline.")
         
         if result:
@@ -415,7 +418,8 @@ class AllHotels(Resource):
         session.add(new_hotel)
         try:
             session.commit()
-        except sq.exc.OperationalError:
+        except sq.exc.SQLAlchemyError as e:
+            session.rollback()
             abort(500, description = "The database server is offline.")
 
         # return success message
@@ -429,7 +433,8 @@ class SingleHotel(Resource):
         # select the correct instance
         try:
             hotel = session.query(Hotel).get(hotel_id)
-        except sq.exc.OperationalError:
+        except sq.exc.SQLAlchemyError as e:
+            session.rollback()
             abort(500, description = "The database server is offline.")
         # get the args from the request
         args = hotel_put_args.parse_args()
@@ -493,13 +498,15 @@ class SingleHotel(Resource):
         # commit the changes to the database
         try:
             session.commit()
-        except sq.exc.OperationalError:
+        except sq.exc.SQLAlchemyError as e:
+            session.rollback()
             abort(500, description = "The database server is offline.")
 
         # then return the new hotel
         try:
             hotels = session.query(Hotel).filter(Hotel.hotel_id == hotel_id).all()
-        except sq.exc.OperationalError:
+        except sq.exc.SQLAlchemyError as e:
+            session.rollback()
             abort(500, description = "The database server is offline.")
         
         # generate a list from hotels
@@ -517,7 +524,8 @@ class SingleHotel(Resource):
         # select the correct instance
         try:
             result = session.query(Hotel).get(hotel_id)
-        except sq.exc.OperationalError:
+        except sq.exc.SQLAlchemyError as e:
+            session.rollback()
             abort(500, description = "The database server is offline.")
         
         # if there is no instance that matches the ID, show error message
@@ -528,7 +536,8 @@ class SingleHotel(Resource):
         session.delete(result)
         try:
             session.commit()
-        except sq.exc.OperationalError:
+        except sq.exc.SQLAlchemyError as e:
+            session.rollback()
             abort(500, description = "The database server is offline.")
 
         # return message on success
@@ -539,7 +548,8 @@ class SingleHotel(Resource):
         # query to get the hotel and filter by hotel number
         try:
             hotels = session.query(Hotel).filter(Hotel.hotel_id == hotel_id).all()
-        except sq.exc.OperationalError:
+        except sq.exc.SQLAlchemyError as e:
+            session.rollback()
             abort(500, description = "The database server is offline.")
         # generate a list from hotels
         result = generate_hotel_entry(hotels)
