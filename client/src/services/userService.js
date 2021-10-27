@@ -7,3 +7,10 @@ export function register(user) {
     ...user
   });
 }
+
+export function editUser(user_id, user) {
+  return http.put(`${apiEndpoint}/${user_id}`, { ...user });
+}
+export function getUser(user_id) {
+  return http.get(`${apiEndpoint}/${user_id}`);
+}

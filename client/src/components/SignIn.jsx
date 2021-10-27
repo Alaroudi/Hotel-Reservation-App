@@ -16,7 +16,7 @@ import Alert from "@mui/material/Alert";
 import { Redirect } from "react-router";
 import LoadingButton from "@mui/lab/LoadingButton";
 
-const SignIn = () => {
+const SignIn = ({ location }) => {
   const [values, setValues] = useState({
     email: "",
     password: ""
@@ -38,7 +38,7 @@ const SignIn = () => {
     try {
       setLoading(true);
       await auth.login(values.email, values.password);
-      window.location = "/";
+      window.location = location.state ? location.state.from.pathname : "/";
     } catch (ex) {
       if (ex.response && ex.response.status === 400) {
         setError(ex.response.data);
@@ -119,10 +119,10 @@ const SignIn = () => {
               Create Account
             </Link>
             <LoadingButton
-              loading={loading}
               variant="contained"
               type="submit"
               size="large"
+              loading={loading}
               loadingPosition="end"
               endIcon={<LoginIcon />}
               sx={{ borderRadius: "20px", mt: "1rem" }}
