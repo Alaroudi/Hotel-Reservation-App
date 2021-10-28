@@ -47,6 +47,23 @@ def generate_available_rooms(hotel, num_standard, num_queen, num_king):
 def generate_availability_entry(hotel_reservation_results):
     # set up list to return
     result_list = []
+    reserved_dict = {}
+    # first loop to tally up the number of reserved rooms per hotel
+    for hotel, reservation in hotel_reservation_results:
+        # if the reservation is for the hotel, update the information
+        if hotel.hotel_id == reservation.hotel_id:
+            # if the hotel's information hasn't been initialized, initialize it
+            if hotel.hotel_id not in reserved_dict:
+                information_dict = {}
+                information_dict["Standard"] = hotel.standard_count
+                information_dict["Queen"] = hotel.queen_count
+                information_dict["King"] = hotel.king_count
+                reserved_dict[hotel.hotel_id] = information_dict
+            # update the number of available rooms for the hotel
+            reserved_dict[hotel.hotel_id]["Standard"] = reserved_dict[hotel.hotel_id]["Standard"] - reservation.reserved_standard_count
+            reserved_dict[hotel.hotel_id]["Queen"] = reserved_dict[hotel.hotel_id]["Queen"] - reservation.reserved_queen_count
+            reserved_dict[hotel.hotel_id]["King"] = reserved_dict[hotel.hotel_id]["King"] - reservation.reserved_king_count
+    # second loop to make the entries
     for hotel, reservation in hotel_reservation_results:
         # set up dictionary to be added to result list
         new_entry = {}
@@ -60,9 +77,9 @@ def generate_availability_entry(hotel_reservation_results):
         new_entry["phone_number"] = hotel.phone_number
         new_entry["weekend_diff_percentage"] = float(hotel.weekend_diff_percentage)
         # calculate total number of rooms
-        num_standard = hotel.standard_count - reservation.reserved_standard_count
-        num_queen = hotel.queen_count - reservation.reserved_queen_count
-        num_king = hotel.king_count - reservation.reserved_king_count
+        num_standard = reserved_dict[hotel.hotel_id]["Standard"]
+        num_queen = reserved_dict[hotel.hotel_id]["Queen"]
+        num_king = reserved_dict[hotel.hotel_id]["King"]
         total_available_rooms = num_standard + num_queen + num_king
         new_entry["number_of_available_rooms"] = total_available_rooms
         # set up amenities list
