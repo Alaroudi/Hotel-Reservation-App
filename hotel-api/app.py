@@ -1,5 +1,6 @@
 from database import *
 from flask import Flask, request, abort, jsonify
+from flask_cors import CORS
 from flask_restful import Api, Resource, reqparse
 from sqlalchemy.orm import sessionmaker
 from sqlacodegen.codegen import CodeGenerator
@@ -45,6 +46,7 @@ session = None
 # load Flask and API
 app = Flask(__name__)
 api = Api(app)
+CORS(app)
 
 # function to generate model
 def generate_model(host, user, password, database, outfile = None):
