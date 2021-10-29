@@ -10,43 +10,6 @@ import os
 import sqlalchemy as sq
 import sys
 
-## function to set up room_types list
-# returns a list of dictionaries with the information of each room_type in them
-def generate_available_rooms(hotel, num_standard, num_queen, num_king):
-    # set up room_type list
-    rooms = []
-    # set up standard inner dictionary
-    standard_information = {}
-    standard_information["price"] = float(hotel.standard_price)
-    standard_information["count"] = num_standard
-    # set up queen inner dictionary
-    queen_information = {}
-    queen_information["price"] = float(hotel.queen_price)
-    queen_information["count"] = num_queen
-    # set up king inner dictionary
-    king_information = {}
-    king_information["price"] = float(hotel.king_price)
-    king_information["count"] = num_king
-    # set up standard outer dictionary and add to rooms
-    standard_dict = {}
-    standard_dict["Standard"] = standard_information
-    # if there are standard rooms available, add it to the list
-    if num_standard:
-        rooms.append(standard_dict)
-    # set up queen outer dictionary and add to rooms
-    queen_dict = {}
-    queen_dict["Queen"] = queen_information
-    # if there are queen rooms available, add it to the list
-    if num_queen:    
-        rooms.append(queen_dict)
-    # set up king outer dictionary and add to rooms
-    king_dict = {}
-    king_dict["King"] = king_information
-    # if there are king rooms available, add it to the list
-    if num_king:
-        rooms.append(king_dict)
-    return rooms
-
 # hotel_reservation_results = session.query(Hotel, Reservation)....
 ## function to generate a valid json object for a hotel entry
 # returns a list of dictionaries depending on the hotel_results query and reservation query
@@ -91,9 +54,12 @@ def generate_availability_entry(hotel_reservation_results):
         # set up amenities list
         amenities_list = generate_amenities(hotel)
         new_entry["amenities"] = amenities_list
-        # set up room_types list
-        room_types_list = generate_available_rooms(hotel, num_standard, num_queen, num_king)
-        new_entry["available_room_types"] = room_types_list
+        new_entry["standard_count"] = num_standard
+        new_entry["standard_price"] = hotel.standard_price
+        new_entry["queen_count"] = num_queen
+        new_entry["queen_price"] = hotel.queen_price
+        new_entry["king_count"] = num_king
+        new_entry["king_price"] = hotel.king_price
         # append the new_entry into results if it is not already added
         if new_entry not in result_list:
             result_list.append(new_entry)
