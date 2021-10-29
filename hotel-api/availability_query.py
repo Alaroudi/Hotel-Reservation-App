@@ -30,15 +30,21 @@ def generate_available_rooms(hotel, num_standard, num_queen, num_king):
     # set up standard outer dictionary and add to rooms
     standard_dict = {}
     standard_dict["Standard"] = standard_information
-    rooms.append(standard_dict)
+    # if there are standard rooms available, add it to the list
+    if num_standard:
+        rooms.append(standard_dict)
     # set up queen outer dictionary and add to rooms
     queen_dict = {}
     queen_dict["Queen"] = queen_information
-    rooms.append(queen_dict)
+    # if there are queen rooms available, add it to the list
+    if num_queen:    
+        rooms.append(queen_dict)
     # set up king outer dictionary and add to rooms
     king_dict = {}
     king_dict["King"] = king_information
-    rooms.append(king_dict)
+    # if there are king rooms available, add it to the list
+    if num_king:
+        rooms.append(king_dict)
     return rooms
 
 # hotel_reservation_results = session.query(Hotel, Reservation)....

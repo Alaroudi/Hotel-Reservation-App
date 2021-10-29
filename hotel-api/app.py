@@ -184,15 +184,21 @@ def generate_rooms(hotel):
     # set up standard outer dictionary and add to rooms
     standard_dict = {}
     standard_dict["Standard"] = standard_information
-    rooms.append(standard_dict)
+    # if there are standard rooms, add it to the list
+    if hotel.standard_count:
+        rooms.append(standard_dict)
     # set up queen outer dictionary and add to rooms
     queen_dict = {}
     queen_dict["Queen"] = queen_information
-    rooms.append(queen_dict)
+    # if there are queen rooms, add it to the list
+    if hotel.queen_count:
+        rooms.append(queen_dict)
     # set up king outer dictionary and add to rooms
     king_dict = {}
     king_dict["King"] = king_information
-    rooms.append(king_dict)
+    # if there are king rooms, add it to the list
+    if hotel.king_count:  
+        rooms.append(king_dict)
     return rooms
 
 ## function to create a new hotel in the database
