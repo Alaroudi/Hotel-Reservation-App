@@ -524,8 +524,8 @@ class HotelAvailability(Resource):
             try:
                 # find all the hotels cities with hotels that have check in and check out on the given days
                 hotel_reservation_results = session.query(Hotel, Reservation).filter((Hotel.city == city) & 
-                                                                                     (Reservation.check_in >= check_in) & 
-                                                                                     (Reservation.check_out <= check_out)).all()
+                                                                                     (Reservation.check_in > check_in) & 
+                                                                                     (Reservation.check_out < check_out)).all()
             except sq.exc.DBAPIError as e:
                 abort(500, description = "The database is offline.")
             else:
