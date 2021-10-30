@@ -4,6 +4,7 @@ from flask import Flask, request, abort, jsonify
 from flask_restful import Api, Resource
 from sqlalchemy.orm import sessionmaker
 from sqlacodegen.codegen import CodeGenerator
+from flask_cors import CORS
 import dotenv
 import io
 import os
@@ -16,6 +17,7 @@ session = None
 # load Flask and API
 app = Flask(__name__)
 api = Api(app)
+CORS(app)
 
 
 def generate_model(host, user, password, database, outfile=None):
@@ -38,133 +40,16 @@ def generate_model(host, user, password, database, outfile=None):
     session = Session()
 
 
+def generate_hotel_name(hotel_id):
+    
+    try:
+       hotel_name = session.query(Hotel).filter(Hotel.hotel_id == hotel_id).first()
+    except sq.exc.DBAPIError as e:
+        session.rollback()
+        abort(500, description = "The database server is offline.")
+    
+    return hotel_name.hotel_name
 
-# function to create a new hotel in the database
-# returns a Hotel object with the variables given from POST
-# expects input in this format:
-'''
-{
-    "hotel_id": 2,
-    "hotel_name": "The Magnolia All Suites",
-    "street_address": "14187 Commercial Trail",
-    "city": "Hampton",
-    "state": "VA",
-    "zipcode": 23452,
-    "phone_number": "213-342-5433",
-    "weekend_diff_percentage": 0.25,
-    "number_of_rooms": 20,
-    "amenities": [
-        "Pool",
-        "Gym",
-        "Spa",
-        "Business Office"
-    ],
-    "room_types": [
-        {
-            "Standard": {
-                "price": 100.0,
-                "count": 10
-            }
-        },
-        {
-            "Queen": {
-                "price": 150.0,
-                "count": 5
-            }
-        },
-        {
-            "King": {
-                "price": 250.0,
-                "count": 5
-            }
-        }
-    ]
-}
-'''
-
-
-def generate_new_hotel():
-    # store each token into a variable
-    hotel_id = request.json["hotel_id"]
-    # check if this hotel_id is already in the database
-    result = session.query(Hotel).filter(Hotel.hotel_id == hotel_id).first()
-    if result:
-        # if it already exists, return the hotel_id
-        return hotel_id
-    # continue if it doesn't
-    hotel_name = request.json["hotel_name"]
-    street_address = request.json["street_address"]
-    city = request.json["city"]
-    state = request.json["state"]
-    zipcode = request.json["zipcode"]
-    phone_number = request.json["phone_number"]
-    number_of_rooms = request.json["number_of_rooms"]
-    weekend_diff_percentage = request.json["weekend_diff_percentage"]
-    # extract data from the list received from amenities
-    amenities = request.json["amenities"]
-    has_pool = 0
-    has_gym = 0
-    has_spa = 0
-    has_bus = 0
-    has_wifi = 0
-    for amenity in amenities:
-        # if the hotel has a pool, add to hotel
-        if amenity == "Pool":
-            has_pool = 1
-        # if the hotel has a gym, add to hotel
-        if amenity == "Gym":
-            has_gym = 1
-        # if the hotel has a spa, add to hotel
-        if amenity == "Spa":
-            has_spa = 1
-        # if the hotel has a business office, add to hotel
-        if amenity == "Business Office":
-            has_bus = 1
-        # if the hotel has a wifi, add to hotel
-        if amenity == "Wifi":
-            has_wifi = 1
-    # extract data from the list received from room_types
-    rooms = request.json["room_types"]
-    for room in rooms:
-        if "Standard" in room:
-            standard_count = room["Standard"]["count"]
-            standard_price = room["Standard"]["price"]
-        if "Queen" in room:
-            queen_count = room["Queen"]["count"]
-            queen_price = room["Queen"]["price"]
-        if "King" in room:
-            king_count = room["King"]["count"]
-            king_price = room["King"]["price"]
-
-    # check if the number of rooms matches the total of all the room types
-    if number_of_rooms != (standard_count + queen_count + king_count):
-        abort(403,
-              description=
-              "The number of rooms does not match the total in room_types.")
-
-    # create a new Hotel object from the information provided
-    new_hotel = Hotel(hotel_id=hotel_id,
-                      hotel_name=hotel_name,
-                      street_address=street_address,
-                      city=city,
-                      state=state,
-                      zipcode=zipcode,
-                      phone_number=phone_number,
-                      standard_count=standard_count,
-                      queen_count=queen_count,
-                      king_count=king_count,
-                      standard_price=standard_price,
-                      queen_price=queen_price,
-                      king_price=king_price,
-                      Pool=has_pool,
-                      Gym=has_gym,
-                      Spa=has_spa,
-                      Bussiness_Office=has_bus,
-                      Wifi=has_wifi,
-                      weekend_diff_percentage=weekend_diff_percentage)
-
-    # return the new Hotel object
-    return new_hotel
 
 
 # function to set a valid json for user object
@@ -256,6 +141,7 @@ def generate_user_entry(user_results):
             "reservation_id": 12,
             "user_id": 1,
             "hotel_id": 4,
+            "hotel_name": ....
             "check_in": "2022-1-12",
             "check_out": "2022-1-25",
             "total_price": 1000.56,
@@ -269,8 +155,12 @@ def generate_user_entry(user_results):
 
 
 def generate_reservation_entry(user_id):
-    user_reservation = session.query(Reservation).filter(Reservation.user_id == user_id).order_by(Reservation.reservation_id).all()
-
+    try:
+        user_reservation = session.query(Reservation).filter(Reservation.user_id == user_id).order_by(Reservation.reservation_id).all()
+    except sq.exc.DBAPIError as e:
+        session.rollback()
+        abort(500, description = "The database server is offline.")
+        
     # set up list to return
     result_list = []
     for res in user_reservation:
@@ -281,6 +171,7 @@ def generate_reservation_entry(user_id):
         new_entry["reservation_id"] = res.reservation_id
         new_entry["user_id"] = res.user_id
         new_entry["hotel_id"] = res.hotel_id
+        new_entry["hotel_name"] = generate_hotel_name(new_entry["hotel_id"])
         new_entry["check_in"] = str(res.check_in)
         new_entry["check_out"] = str(res.check_out)
         new_entry["total_price"] = float(res.total_price)
@@ -296,7 +187,6 @@ def generate_reservation_entry(user_id):
 
 
 
-
 ## ---------- Admin ---------- ##
 # class for interacting with all Reservations in the database
 
@@ -306,7 +196,12 @@ class AllReservations(Resource):
     # function to get all hotels from the database
     def get(self):
         # query to get all hotels
-        all_users = session.query(User).order_by(User.user_id).all()
+        try:
+            all_users = session.query(User).order_by(User.user_id).all()
+        except sq.exc.DBAPIError as e:
+            session.rollback()
+            abort(500, description = "The database server is offline.")
+
         # generate a list from hotels
         result = generate_user_entry(all_users)
 
@@ -316,6 +211,32 @@ class AllReservations(Resource):
         # return the results
         return result
 
+    def post(self):
+
+        user_id = request.json["user_id"]
+        hotel_id = request.json["hotel_id"]
+        check_in = request.json["check_in"]
+        check_out = request.json["check_out"]
+        total_price = request.json["total_price"]
+        standard = request.json["reserved_standard_count"]
+        queen = request.json["reserved_queen_count"]
+        king = request.json["reserved_king_count"]
+        
+        new_reservation = Reservation( user_id = user_id, hotel_id = hotel_id, check_in = check_in, check_out = check_out,
+                                                    total_price = total_price, reserved_standard_count = standard,
+                                                     reserved_queen_count = queen, reserved_king_count = king)
+        try:
+            session.add(new_reservation)
+            session.commit()
+
+        except sq.exc.DBAPIError as e:
+            session.rollback()
+            abort(500, description = "The database server is offline.")
+
+        return {
+            "message":
+            f"Reservation ID {new_reservation.reservation_id} was successfully created."
+        } 
 
 
 ## ---------- User ---------- ##
@@ -337,13 +258,20 @@ class UserReservation(Resource):
 
         # return the result
         return result
+
+    
     
 
 
 class SingleBooking(Resource):
-    # function to delete a single hotel from the database by ID number
+    # function to delete a single reservation from the database by ID number
     def delete(self, reservation_id):
-        result = session.query(Reservation).get(reservation_id)
+        try:
+            result = session.query(Reservation).get(reservation_id)
+        except sq.exc.DBAPIError as e:
+            session.rollback()
+            abort(500, description = "The database server is offline.")
+        
         if not result:
             abort(
                 404,
@@ -351,13 +279,47 @@ class SingleBooking(Resource):
                 f"Reservation ID {reservation_id} does not exist in the database."
             )
 
-        session.delete(result)
-        session.commit()
-
+        try:
+            session.delete(result)
+            session.commit()
+        except sq.exc.DBAPIError as e:
+            session.rollback()
+            abort(500, description = "The database server is offline.")
+        
         # return message on success
         return {
             "message":
             f"Reservation ID {reservation_id} was successfully deleted."
+        }
+
+    def put(self, reservation_id):
+        
+        try:
+            result = session.query(Reservation).get(reservation_id)
+        except sq.exc.DBAPIError as e:
+            session.rollback()
+            abort(500, description = "The database server is offline.")
+
+        info_update = request.json()
+        
+        if not result:
+            abort(
+                404,
+                description=
+                f"Reservation ID {reservation_id} does not exist in the database."
+            )
+        
+        
+        try:
+            session.commit()
+        except sq.exc.DBAPIError as e:
+            session.rollback()
+            abort(500, description = "The database server is offline.")
+
+        # return message on success
+        return {
+            "message":
+            f"Reservation ID {reservation_id} was successfully updated."
         }
 
     
@@ -380,6 +342,8 @@ if __name__ == "__main__":
     # generate model and output to db.py
     generate_model(host, username, password, database, "database.py")
     app.run(debug=True)
+
+
 '''
 from flask import Flask, request, jsonify, abort
 from datetime import datetime, date
