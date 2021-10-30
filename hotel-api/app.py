@@ -444,12 +444,12 @@ class SingleHotel(Resource):
 # hotel_reservation_results = session.query(Hotel, Reservation)....
 ## function to generate a valid json object for a hotel entry
 # returns a list of dictionaries depending on the hotel_results query and reservation query
-def generate_availability_entry(hotel_reservation_results):
+def generate_availability_entry(hotel_reservation_all, hotel_reservation_date_match):
     # set up list to return
     result_list = []
     reserved_dict = {}
     # first loop to tally up the number of reserved rooms per hotel
-    for hotel, reservation in hotel_reservation_results:
+    for hotel, reservation in hotel_reservation_date_match:
         # if the reservation is for the hotel, update the information
         if hotel.hotel_id == reservation.hotel_id:
             # if the hotel's information hasn't been initialized, initialize it
@@ -464,7 +464,7 @@ def generate_availability_entry(hotel_reservation_results):
             reserved_dict[hotel.hotel_id]["Queen"] = reserved_dict[hotel.hotel_id]["Queen"] - reservation.reserved_queen_count
             reserved_dict[hotel.hotel_id]["King"] = reserved_dict[hotel.hotel_id]["King"] - reservation.reserved_king_count
     # second loop to make the entries
-    for hotel, reservation in hotel_reservation_results:
+    for hotel, reservation in hotel_reservation_all:
         # set up dictionary to be added to result list
         new_entry = {}
         # enter each respective variable into the dictionary
@@ -522,17 +522,19 @@ class HotelAvailability(Resource):
             abort(400, description = "Must provide for city, check_in, and check_out.")
         else:
             try:
-                # find all the hotels cities with hotels that have check in and check out on the given days
-                hotel_reservation_results = session.query(Hotel, Reservation).filter((Hotel.city == city) & 
-                                                                                     (Reservation.check_in > check_in) & 
-                                                                                     (Reservation.check_out < check_out)).all()
+                # find all the hotels in that city
+                hotel_reservation_all = session.query(Hotel, Reservation).filter(Hotel.city == city).all()
+                # find all the hotels that have check in and check out on the given days in that city
+                hotel_reservation_date_match = session.query(Hotel, Reservation).filter((Hotel.city == city) & 
+                                                                                     (Reservation.check_in >= check_in) & 
+                                                                                     (Reservation.check_out <= check_out)).all()
             except sq.exc.DBAPIError as e:
                 abort(500, description = "The database is offline.")
             else:
                 # if there are no hotels, show error
-                if not hotel_reservation_results:
+                if not hotel_reservation_all:
                     abort(400, description  = f"There are no hotels that are in that city ({city}).")
-                results = generate_availability_entry(hotel_reservation_results)
+                results = generate_availability_entry(hotel_reservation_all, hotel_reservation_date_match)
                 return results
 
 # add to each class to API
