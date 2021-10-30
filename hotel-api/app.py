@@ -37,7 +37,6 @@ hotel_put_args.add_argument("zipcode", type = int, help = "Enter the zipcode of 
 hotel_put_args.add_argument("phone_number", type = str, help = "Enter phone number name of the hotel. (string)")
 hotel_put_args.add_argument("weekend_diff_percentage", type = float, help = "Enter the price differential for the weekend of the hotel. (decimal number)")
 hotel_put_args.add_argument("amenities", type = list, help = "Enter the amenities of the hotel. (list of strings)")
-hotel_put_args.add_argument("room_types", type = list, help = "Enter the room type data of the hotel. (list of dictionaries)")
 hotel_put_args.add_argument("standard_count", type = int, help = "Enter number of standard rooms. (int)")
 hotel_put_args.add_argument("standard_price", type = float, help = "Enter price of standard rooms. (float)")
 hotel_put_args.add_argument("queen_count", type = int, help = "Enter number of queen rooms. (int)")
@@ -47,9 +46,6 @@ hotel_put_args.add_argument("king_price", type = float, help = "Enter price of k
 
 # set up list for valid amenities
 valid_amenities = ["Pool", "Gym", "Spa", "Business Office", "Wifi"]
-
-# set up list for valid room_types
-valid_room_types = ["Standard", "Queen", "King"]
 
 # global variable to set up session
 session = None
@@ -284,7 +280,6 @@ class AllHotels(Resource):
             phone_number = request.json["phone_number"]
             weekend_diff_percentage = request.json["weekend_diff_percentage"]
             amenities = request.json["amenities"]
-            room_types = request.json["room_types"]
             standard_count = request.json["standard_count"]
             standard_price = request.json["standard_price"]
             queen_count = request.json["queen_count"]
@@ -446,9 +441,104 @@ class SingleHotel(Resource):
             # return the result
             return result[0]
 
+# hotel_reservation_results = session.query(Hotel, Reservation)....
+## function to generate a valid json object for a hotel entry
+# returns a list of dictionaries depending on the hotel_results query and reservation query
+def generate_availability_entry(hotel_reservation_results):
+    # set up list to return
+    result_list = []
+    reserved_dict = {}
+    # first loop to tally up the number of reserved rooms per hotel
+    for hotel, reservation in hotel_reservation_results:
+        # if the reservation is for the hotel, update the information
+        if hotel.hotel_id == reservation.hotel_id:
+            # if the hotel's information hasn't been initialized, initialize it
+            if hotel.hotel_id not in reserved_dict:
+                information_dict = {}
+                information_dict["Standard"] = hotel.standard_count
+                information_dict["Queen"] = hotel.queen_count
+                information_dict["King"] = hotel.king_count
+                reserved_dict[hotel.hotel_id] = information_dict
+            # update the number of available rooms for the hotel
+            reserved_dict[hotel.hotel_id]["Standard"] = reserved_dict[hotel.hotel_id]["Standard"] - reservation.reserved_standard_count
+            reserved_dict[hotel.hotel_id]["Queen"] = reserved_dict[hotel.hotel_id]["Queen"] - reservation.reserved_queen_count
+            reserved_dict[hotel.hotel_id]["King"] = reserved_dict[hotel.hotel_id]["King"] - reservation.reserved_king_count
+    # second loop to make the entries
+    for hotel, reservation in hotel_reservation_results:
+        # set up dictionary to be added to result list
+        new_entry = {}
+        # enter each respective variable into the dictionary
+        new_entry["hotel_id"] = hotel.hotel_id
+        new_entry["hotel_name"] = hotel.hotel_name
+        new_entry["street_address"] = hotel.street_address
+        new_entry["city"] = hotel.city
+        new_entry["state"] = hotel.state
+        new_entry["zipcode"] = hotel.zipcode
+        new_entry["phone_number"] = hotel.phone_number
+        new_entry["weekend_diff_percentage"] = float(hotel.weekend_diff_percentage)
+        # calculate total number of rooms
+        if hotel.hotel_id in reserved_dict:
+            # if the there were reservations in the hotel, update the output to reflect them
+            num_standard = reserved_dict[hotel.hotel_id]["Standard"]
+            num_queen = reserved_dict[hotel.hotel_id]["Queen"]
+            num_king = reserved_dict[hotel.hotel_id]["King"]
+        else:
+            # if there were no reservations in the hotel, keep the output the default number of rooms
+            num_standard = hotel.standard_count
+            num_queen = hotel.queen_count
+            num_king = hotel.king_count
+        total_available_rooms = num_standard + num_queen + num_king
+        new_entry["number_of_available_rooms"] = total_available_rooms
+        # set up amenities list
+        amenities_list = generate_amenities(hotel)
+        new_entry["amenities"] = amenities_list
+        new_entry["standard_count"] = num_standard
+        new_entry["standard_price"] = float(hotel.standard_price)
+        new_entry["queen_count"] = num_queen
+        new_entry["queen_price"] = float(hotel.queen_price)
+        new_entry["king_count"] = num_king
+        new_entry["king_price"] = float(hotel.king_price)
+        # append the new_entry into results if it is not already added
+        if new_entry not in result_list:
+            result_list.append(new_entry)
+    # return results
+    return result_list
+
+## ---------- Availability ---------- ##
+# class to interact with hotel availability
+class HotelAvailability(Resource):
+
+    # function to get availablity of a hotel according to check-in, check-out, and city
+    def get(self):
+        # parse the arguments passed through the api
+        args = request.args
+        # we expect city, check_in, and check_out
+        try:
+            city = args["city"]
+            check_in = args["check_in"]
+            check_out = args["check_out"]
+        # if the request does not have all three, abort with 400
+        except:
+            abort(400, description = "Must provide for city, check_in, and check_out.")
+        else:
+            try:
+                # find all the hotels cities with hotels that have check in and check out on the given days
+                hotel_reservation_results = session.query(Hotel, Reservation).filter((Hotel.city == city) & 
+                                                                                     (Reservation.check_in >= check_in) & 
+                                                                                     (Reservation.check_out <= check_out)).all()
+            except sq.exc.DBAPIError as e:
+                abort(500, description = "The database is offline.")
+            else:
+                # if there are no hotels, show error
+                if not hotel_reservation_results:
+                    abort(400, description  = f"There are no hotels that are in that city ({city}).")
+                results = generate_availability_entry(hotel_reservation_results)
+                return results
+
 # add to each class to API
 api.add_resource(SingleHotel, "/api/hotels/<int:hotel_id>")
 api.add_resource(AllHotels, "/api/hotels")
+api.add_resource(HotelAvailability, "/api/hotel-availability/")
 
 if __name__ == "__main__":
     # load dotenv
