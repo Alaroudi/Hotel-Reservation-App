@@ -1,3 +1,4 @@
+from sqlalchemy.sql.sqltypes import Boolean
 from database import *
 from flask import Flask, request, abort, jsonify
 from flask_cors import CORS
@@ -19,9 +20,12 @@ hotel_post_args.add_argument("state", type = str, help = "Enter the state of the
 hotel_post_args.add_argument("zipcode", type = int, help = "Enter the zipcode of the hotel. (5-digit int)", required = True)
 hotel_post_args.add_argument("phone_number", type = str, help = "Enter phone number name of the hotel. (string)", required = True)
 hotel_post_args.add_argument("weekend_diff_percentage", type = float, help = "Enter the price differential for the weekend of the hotel. (decimal number)", required = True)
-hotel_post_args.add_argument("amenities", type = list, help = "Enter the amenities of the hotel. (list of strings)", required = True)
 hotel_post_args.add_argument("standard_count", type = int, help = "Enter number of standard rooms. (int)", required = True)
-hotel_post_args.add_argument("standard_price", type = float, help = "Enter price of standard rooms. (float)", required = True)
+hotel_post_args.add_argument("Pool", type = Boolean, help = "Enter true or false for Pool. (Boolean)", required = True)
+hotel_post_args.add_argument("Spa", type = Boolean, help = "Enter true or false for Spa. (Boolean)", required = True)
+hotel_post_args.add_argument("Gym", type = Boolean, help = "Enter true or false for Gym. (Boolean)", required = True)
+hotel_post_args.add_argument("Wifi", type = Boolean, help = "Enter true or false for Wifi. (Boolean)", required = True)
+hotel_post_args.add_argument("Bussiness_Office", type = Boolean, help = "Enter true or false for Bussiness_Office. (Boolean)", required = True)
 hotel_post_args.add_argument("queen_count", type = int, help = "Enter number of queen rooms. (int)", required = True)
 hotel_post_args.add_argument("queen_price", type = float, help = "Enter price of queen rooms. (float)", required = True)
 hotel_post_args.add_argument("king_count", type = int, help = "Enter number of king rooms. (int)", required = True)
@@ -36,7 +40,11 @@ hotel_put_args.add_argument("state", type = str, help = "Enter the state of the 
 hotel_put_args.add_argument("zipcode", type = int, help = "Enter the zipcode of the hotel. (5-digit int)")
 hotel_put_args.add_argument("phone_number", type = str, help = "Enter phone number name of the hotel. (string)")
 hotel_put_args.add_argument("weekend_diff_percentage", type = float, help = "Enter the price differential for the weekend of the hotel. (decimal number)")
-hotel_put_args.add_argument("amenities", type = list, help = "Enter the amenities of the hotel. (list of strings)")
+hotel_put_args.add_argument("Pool", type = Boolean, help = "Enter true or false for Pool. (Boolean)")
+hotel_put_args.add_argument("Spa", type = Boolean, help = "Enter true or false for Spa. (Boolean)")
+hotel_put_args.add_argument("Gym", type = Boolean, help = "Enter true or false for Gym. (Boolean)")
+hotel_put_args.add_argument("Wifi", type = Boolean, help = "Enter true or false for Wifi. (Boolean)")
+hotel_put_args.add_argument("Bussiness_Office", type = Boolean, help = "Enter true or false for Bussiness_Office. (Boolean)")
 hotel_put_args.add_argument("standard_count", type = int, help = "Enter number of standard rooms. (int)")
 hotel_put_args.add_argument("standard_price", type = float, help = "Enter price of standard rooms. (float)")
 hotel_put_args.add_argument("queen_count", type = int, help = "Enter number of queen rooms. (int)")
@@ -264,9 +272,10 @@ class AllHotels(Resource):
         # store each token into a variable
         hotel_name = request.json["hotel_name"]
         street_address = request.json["street_address"]
+        city = request.json["city"]
         # check if this hotel already exists in the database
         try:
-            result = session.query(Hotel).filter((Hotel.hotel_name == hotel_name) & (Hotel.street_address == street_address)).first()
+            result = session.query(Hotel).filter((Hotel.hotel_name == hotel_name) & (Hotel.street_address == street_address) & (Hotel.city == city)).first()
         except sq.exc.DBAPIError as e:
             session.rollback()
             abort(500, description = "The database server is offline.")
@@ -279,7 +288,11 @@ class AllHotels(Resource):
             zipcode = request.json["zipcode"]
             phone_number = request.json["phone_number"]
             weekend_diff_percentage = request.json["weekend_diff_percentage"]
-            amenities = request.json["amenities"]
+            Pool = request.json["Pool"]
+            Gym = request.json["Gym"]
+            Spa = request.json["Spa"]
+            Bussiness_Office = request.json["Bussiness_Office"]
+            Wifi = request.json["Wifi"]    
             standard_count = request.json["standard_count"]
             standard_price = request.json["standard_price"]
             queen_count = request.json["queen_count"]
@@ -288,20 +301,26 @@ class AllHotels(Resource):
             king_price = request.json["king_price"]
 
             # generate the new Hotel object
-            new_hotel = generate_new_hotel(hotel_name,
-                                           street_address,
-                                           city,
-                                           state,
-                                           zipcode,
-                                           phone_number,
-                                           weekend_diff_percentage,
-                                           amenities,
-                                           standard_count,
-                                           standard_price,
-                                           queen_count,
-                                           queen_price,
-                                           king_count,
-                                           king_price)
+
+            new_hotel = Hotel(hotel_name = hotel_name,
+                      street_address = street_address,
+                      city = city,
+                      state = state, 
+                      zipcode = zipcode, 
+                      phone_number = phone_number, 
+                      standard_count = standard_count, 
+                      queen_count = queen_count, 
+                      king_count = king_count,
+                      standard_price = standard_price, 
+                      queen_price = queen_price, 
+                      king_price = king_price, 
+                      Pool = Pool, 
+                      Gym = Gym,
+                      Spa = Spa,
+                      Bussiness_Office = Bussiness_Office, 
+                      Wifi = Wifi, 
+                      weekend_diff_percentage = weekend_diff_percentage)
+
             
             # add and commit the new hotel to database
             try:
@@ -348,38 +367,36 @@ class SingleHotel(Resource):
                 hotel.phone_number = request.json["phone_number"]
             if args["weekend_diff_percentage"]:
                 hotel.weekend_diff_percentage = request.json["weekend_diff_percentage"]
-            if args["amenities"]:
-                amenities = request.json["amenities"]
-                # check to see if the amenities are valid
-                for amenity in amenities:
-                    if amenity not in valid_amenities:
-                        abort(400, description = f"Amenity ({amenity}) is not valid.")
-                # get the values
-                has_pool, has_gym, has_spa, has_bus, has_wifi = generate_hotel_amenities(amenities)
-                # update the hotel with the new values
-                hotel.Pool = has_pool
-                hotel.Gym = has_gym
-                hotel.Spa = has_spa
-                hotel.Bussiness_Office = has_bus
-                hotel.Wifi = has_wifi
+
+            # update the hotel with the new values
+            if args["Pool"]: 
+                hotel.Pool = request.json["Pool"]
+            if args["Gym"]: 
+                hotel.Gym = request.json["Gym"]
+            if args["Spa"]: 
+                hotel.Spa = request.json["Spa"]
+            if args["Bussiness_Office"]: 
+                hotel.Bussiness_Office = request.json["Bussiness_Office"]
+            if args["Wifi"]: 
+                hotel.Wifi = request.json["Wifi"]   
             if args["standard_count"]:
                 hotel.standard_count = request.json["standard_count"]
             if args["standard_price"]:
-                hotel.standard_count = request.json["standard_price"]
+                hotel.standard_price = request.json["standard_price"]
             if args["queen_count"]:
-                hotel.standard_count = request.json["queen_count"]
+                hotel.queen_count = request.json["queen_count"]
             if args["queen_price"]:
-                hotel.standard_count = request.json["queen_price"]
+                hotel.queen_price = request.json["queen_price"]
             if args["king_count"]:
-                hotel.standard_count = request.json["king_count"]
+                hotel.king_count = request.json["king_count"]
             if args["king_price"]:
-                hotel.standard_count = request.json["king_price"]
+                hotel.king_price = request.json["king_price"]
             # commit the changes to the database
             try:
                 session.commit()
             except sq.exc.DBAPIError as e:
                 session.rollback()
-                abort(500, description = "The database server is offline.")
+                abort(500, description = "%s" % e)
             else:
                 # then return the new hotel
                 try:
