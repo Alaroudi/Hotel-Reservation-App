@@ -1,4 +1,5 @@
 import MenuIcon from "@mui/icons-material/Menu";
+import { Menu, MenuItem } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import { useState } from "react";
 import { Link, useHistory } from "react-router-dom";
@@ -7,6 +8,15 @@ import "./NavBar.css";
 const NavBar = ({ user }) => {
   const [toggle, setToggle] = useState(false);
   const history = useHistory();
+
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+  const handleClick = event => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
   return (
     <nav className={toggle ? "nav collapsible--expanded" : "nav"}>
       <Link className="brand" to="/">
@@ -41,9 +51,38 @@ const NavBar = ({ user }) => {
               My Reservations
             </li>
             {user.isAdmin && (
-              <li className="nav__item" onClick={() => history.push("/admin")}>
-                Admin
-              </li>
+              <>
+                <li className="nav__item" onClick={handleClick}>
+                  Admin
+                </li>
+                <Menu
+                  id="basic-menu"
+                  anchorEl={anchorEl}
+                  open={open}
+                  sx={{ color: "black" }}
+                  onClose={handleClose}
+                  MenuListProps={{
+                    "aria-labelledby": "basic-button"
+                  }}
+                >
+                  <MenuItem
+                    onClick={() => {
+                      handleClose();
+                      history.push("/hotels");
+                    }}
+                  >
+                    Hotels
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      handleClose();
+                      history.push("/reservations");
+                    }}
+                  >
+                    User Reservations
+                  </MenuItem>
+                </Menu>
+              </>
             )}
             <li className="nav__item" onClick={() => history.push("/logout")}>
               Logout

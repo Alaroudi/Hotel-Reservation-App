@@ -21,3 +21,9 @@ a {
   height: 100vh;
   grid-template-rows: auto 1fr;
 }
+
+li,
+ul {
+  padding: 0;
+  margin: 0;
+}

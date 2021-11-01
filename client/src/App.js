@@ -10,13 +10,14 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useEffect, useState } from "react";
 import auth from "./services/authService";
+import HotelsTable from "./components/HotelsTable";
+import HotelForm from "./components/HotelForm";
 
 const App = () => {
   const [user, setUser] = useState();
 
   useEffect(() => {
     const user = auth.getCurrentUser();
-    console.log(user);
     setUser(user);
   }, []);
 
@@ -31,6 +32,8 @@ const App = () => {
           <Route path="/profile" component={Profile} />
           <Route path="/logout" component={Logout} />
           <Route path="/home" component={Home} />
+          <Route path="/hotels/:id" component={HotelForm} />
+          <Route path="/hotels" component={HotelsTable} />
           <Route path="/not-found" component={PageNotFound} />
           <Redirect from="/" exact to="/home" />
           <Redirect to="/not-found" />

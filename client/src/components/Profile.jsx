@@ -9,12 +9,13 @@ import AdapterDateFns from "@mui/lab/AdapterDateFns";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LoadingButton from "@mui/lab/LoadingButton";
 import EditIcon from "@mui/icons-material/Edit";
-import IconButton from "@mui/material/IconButton";
+import Button from "@mui/material/Button";
 import "./Profile.css";
 import * as userService from "../services/userService";
 import auth from "../services/authService";
+import Loading from "./common/Loading";
 
-const Profile = () => {
+const Profile = ({ history }) => {
   const [user, setUser] = useState({
     first_name: "",
     last_name: "",
@@ -36,16 +37,21 @@ const Profile = () => {
   const [disapled, setDisapled] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
     const getUser = async () => {
       const user_id = auth.getCurrentUser()?.id;
-      const userInfo = await userService.getUser(user_id);
-      setUser(userInfo.data);
-      setLoading(false);
-      //   console.log(userInfo.data);
+      try {
+        const userInfo = await userService.getUser(user_id);
+        setUser(userInfo.data);
+      } catch (ex) {
+        if (ex.response && ex.response.status === 404) {
+          history.replace("/not-found");
+        }
+      } finally {
+        setLoading(false);
+      }
     };
     getUser();
-  }, []);
+  }, [history]);
 
   const handleChange = event => {
     if (event.target.id === "password" && event.target.value.length < 4) {
@@ -78,7 +84,7 @@ const Profile = () => {
   };
 
   if (loading) {
-    return <h1>Loading...</h1>;
+    return <Loading />;
   }
 
   return (
@@ -112,17 +118,19 @@ const Profile = () => {
             Account Updated!
           </Alert>
         )}
-        <IconButton
-          color="success"
-          className="grid-span edit-icon"
+
+        <Button
+          color="secondary"
+          className="edit-btn"
+          size="large"
+          endIcon={<EditIcon />}
           onClick={() => {
             setDisapled(!disapled);
             setSuccess(false);
           }}
         >
           Edit
-          <EditIcon />
-        </IconButton>
+        </Button>
         <TextField
           variant="outlined"
           label="First name"
