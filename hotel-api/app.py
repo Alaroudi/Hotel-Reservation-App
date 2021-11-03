@@ -33,24 +33,24 @@ hotel_post_args.add_argument("king_price", type = float, help = "Enter price of 
 
 # set up request parser for PUT
 hotel_put_args = reqparse.RequestParser()
-hotel_put_args.add_argument("hotel_name", type = str, help = "Enter the name of the hotel. (string)")
-hotel_put_args.add_argument("street_address", type = str, help = "Enter the street address of the hotel. (string)")
-hotel_put_args.add_argument("city", type = str, help = "Enter the city of the hotel. (string)")
-hotel_put_args.add_argument("state", type = str, help = "Enter the state of the hotel. (2-character string)")
-hotel_put_args.add_argument("zipcode", type = int, help = "Enter the zipcode of the hotel. (5-digit int)")
-hotel_put_args.add_argument("phone_number", type = str, help = "Enter phone number name of the hotel. (string)")
-hotel_put_args.add_argument("weekend_diff_percentage", type = float, help = "Enter the price differential for the weekend of the hotel. (decimal number)")
-hotel_put_args.add_argument("Pool", type = Boolean, help = "Enter true or false for Pool. (Boolean)")
-hotel_put_args.add_argument("Spa", type = Boolean, help = "Enter true or false for Spa. (Boolean)")
-hotel_put_args.add_argument("Gym", type = Boolean, help = "Enter true or false for Gym. (Boolean)")
-hotel_put_args.add_argument("Wifi", type = Boolean, help = "Enter true or false for Wifi. (Boolean)")
-hotel_put_args.add_argument("Bussiness_Office", type = Boolean, help = "Enter true or false for Bussiness_Office. (Boolean)")
-hotel_put_args.add_argument("standard_count", type = int, help = "Enter number of standard rooms. (int)")
-hotel_put_args.add_argument("standard_price", type = float, help = "Enter price of standard rooms. (float)")
-hotel_put_args.add_argument("queen_count", type = int, help = "Enter number of queen rooms. (int)")
-hotel_put_args.add_argument("queen_price", type = float, help = "Enter price of queen rooms. (float)")
-hotel_put_args.add_argument("king_count", type = int, help = "Enter number of king rooms. (int)")
-hotel_put_args.add_argument("king_price", type = float, help = "Enter price of king rooms. (float)")
+hotel_put_args.add_argument("hotel_name", type = str, help = "Enter the name of the hotel. (string)", required=True)
+hotel_put_args.add_argument("street_address", type = str, help = "Enter the street address of the hotel. (string)", required=True)
+hotel_put_args.add_argument("city", type = str, help = "Enter the city of the hotel. (string)", required=True)
+hotel_put_args.add_argument("state", type = str, help = "Enter the state of the hotel. (2-character string)", required=True)
+hotel_put_args.add_argument("zipcode", type = int, help = "Enter the zipcode of the hotel. (5-digit int)", required=True)
+hotel_put_args.add_argument("phone_number", type = str, help = "Enter phone number name of the hotel. (string)", required=True)
+hotel_put_args.add_argument("weekend_diff_percentage", type = float, help = "Enter the price differential for the weekend of the hotel. (decimal number)", required=True)
+hotel_put_args.add_argument("Pool", type = Boolean, help = "Enter true or false for Pool. (Boolean)", required=True)
+hotel_put_args.add_argument("Spa", type = Boolean, help = "Enter true or false for Spa. (Boolean)", required=True)
+hotel_put_args.add_argument("Gym", type = Boolean, help = "Enter true or false for Gym. (Boolean)", required=True)
+hotel_put_args.add_argument("Wifi", type = Boolean, help = "Enter true or false for Wifi. (Boolean)", required=True)
+hotel_put_args.add_argument("Bussiness_Office", type = Boolean, help = "Enter true or false for Bussiness_Office. (Boolean)", required=True)
+hotel_put_args.add_argument("standard_count", type = int, help = "Enter number of standard rooms. (int)", required=True)
+hotel_put_args.add_argument("standard_price", type = float, help = "Enter price of standard rooms. (float)", required=True)
+hotel_put_args.add_argument("queen_count", type = int, help = "Enter number of queen rooms. (int)", required=True)
+hotel_put_args.add_argument("queen_price", type = float, help = "Enter price of queen rooms. (float)", required=True)
+hotel_put_args.add_argument("king_count", type = int, help = "Enter number of king rooms. (int)", required=True)
+hotel_put_args.add_argument("king_price", type = float, help = "Enter price of king rooms. (float)", required=True)
 
 # set up list for valid amenities
 valid_amenities = ["Pool", "Gym", "Spa", "Business Office", "Wifi"]
@@ -353,44 +353,25 @@ class SingleHotel(Resource):
                 abort(404, description  = f"Hotel ID {hotel_id} does not exist in the database.")
             
             # check to see which arguments have values
-            if args["hotel_name"]:
-                hotel.hotel_name = request.json["hotel_name"]
-            if args["street_address"]:
-                hotel.street_address = request.json["street_address"]
-            if args["city"]:
-                hotel.city = request.json["city"]
-            if args["state"]:
-                hotel.state = request.json["state"]
-            if args["zipcode"]:
-                hotel.zipcode = request.json["zipcode"]
-            if args["phone_number"]:
-                hotel.phone_number = request.json["phone_number"]
-            if args["weekend_diff_percentage"]:
-                hotel.weekend_diff_percentage = request.json["weekend_diff_percentage"]
+            hotel.hotel_name = request.json["hotel_name"]       
+            hotel.street_address = request.json["street_address"]       
+            hotel.city = request.json["city"]    
+            hotel.state = request.json["state"]    
+            hotel.zipcode = request.json["zipcode"] 
+            hotel.phone_number = request.json["phone_number"]
+            hotel.weekend_diff_percentage = request.json["weekend_diff_percentage"]
+            hotel.Pool = request.json["Pool"]
+            hotel.Gym = request.json["Gym"]
+            hotel.Spa = request.json["Spa"]
+            hotel.Bussiness_Office = request.json["Bussiness_Office"]
+            hotel.Wifi = request.json["Wifi"]   
+            hotel.standard_count = request.json["standard_count"]   
+            hotel.standard_price = request.json["standard_price"]   
+            hotel.queen_count = request.json["queen_count"]
+            hotel.queen_price = request.json["queen_price"]
+            hotel.king_count = request.json["king_count"]
+            hotel.king_price = request.json["king_price"]
 
-            # update the hotel with the new values
-            if args["Pool"]: 
-                hotel.Pool = request.json["Pool"]
-            if args["Gym"]: 
-                hotel.Gym = request.json["Gym"]
-            if args["Spa"]: 
-                hotel.Spa = request.json["Spa"]
-            if args["Bussiness_Office"]: 
-                hotel.Bussiness_Office = request.json["Bussiness_Office"]
-            if args["Wifi"]: 
-                hotel.Wifi = request.json["Wifi"]   
-            if args["standard_count"]:
-                hotel.standard_count = request.json["standard_count"]
-            if args["standard_price"]:
-                hotel.standard_price = request.json["standard_price"]
-            if args["queen_count"]:
-                hotel.queen_count = request.json["queen_count"]
-            if args["queen_price"]:
-                hotel.queen_price = request.json["queen_price"]
-            if args["king_count"]:
-                hotel.king_count = request.json["king_count"]
-            if args["king_price"]:
-                hotel.king_price = request.json["king_price"]
             # commit the changes to the database
             try:
                 session.commit()
