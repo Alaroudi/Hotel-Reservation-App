@@ -1,5 +1,5 @@
 .hotel-container {
-  padding: 1rem;
+  padding: 1rem 2rem;
 }
 
 tbody tr:hover {
@@ -50,5 +50,8 @@ table {
     grid-column: initial;
     justify-self: end;
     width: 5rem;
+  }
+  .hotel-container {
+    padding: 1rem;
   }
 }

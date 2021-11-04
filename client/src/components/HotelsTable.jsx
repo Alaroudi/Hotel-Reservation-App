@@ -12,7 +12,7 @@ import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
 import DeleteIcon from "@mui/icons-material/Delete";
-
+import ApartmentIcon from "@mui/icons-material/Apartment";
 const HotelsTable = ({ history }) => {
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -75,16 +75,26 @@ const HotelsTable = ({ history }) => {
 
   return (
     <div className="hotel-container">
-      <div style={{ marginBottom: "1rem" }}>
+      <div
+        style={{
+          marginBottom: "1rem",
+          marginTop: "0.5rem",
+          textAlign: "right"
+        }}
+      >
         <Button
           variant="contained"
           color="secondary"
           size="large"
           onClick={() => history.push("/hotels/new")}
+          startIcon={<ApartmentIcon />}
         >
           Create New Hotel
         </Button>
       </div>
+      <p
+        style={{ color: "#3e4246" }}
+      >{`Showing ${hotels.length} hotels in the database.`}</p>
       <TableContainer component={Paper}>
         <Table aria-label="customized table">
           <TableHead>
@@ -196,10 +206,6 @@ const HotelsTable = ({ history }) => {
           </TableBody>
         </Table>
       </TableContainer>
-
-      {/* {hotels.map(hotel => (
-        <Hotel key={hotel.hotel_id} hotel={hotel} />
-      ))} */}
     </div>
   );
 };

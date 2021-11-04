@@ -40,7 +40,7 @@ const HotelForm = ({ match, history }) => {
     standard_price: 0.0
   });
 
-  const [error, setError] = useState(null);
+  const [error, setError] = useState("");
 
   const [success, setSuccess] = useState(false);
   const [buttonLoading, setButtonLoading] = useState(false);
@@ -78,7 +78,9 @@ const HotelForm = ({ match, history }) => {
       } catch (ex) {
         if (ex.response) {
           if (ex.response.status === 404) history.replace("/not-found");
-          if (ex.response.status === 400) setError(ex.response.data);
+          if (ex.response.status === 400) {
+            setError(ex.response.data.message);
+          }
         }
       } finally {
         setLoading(false);
@@ -98,22 +100,24 @@ const HotelForm = ({ match, history }) => {
 
   const handleSubmit = async event => {
     event.preventDefault();
-    setError(null);
+    setError("");
     setSuccess(false);
     setButtonLoading(false);
     try {
       setButtonLoading(true);
-
       await hotelService.saveHotel(hotel);
       setSuccess(true);
+      setDisapled(true);
     } catch (ex) {
-      if (ex.response && ex.response.status === 400) {
-        setError(ex.response.data);
+      if (ex.response) {
+        if (ex.response.status === 400) {
+          setError(ex.response.data.message);
+        }
       }
+      setDisapled(false);
     } finally {
       setButtonLoading(false);
     }
-    setDisapled(true);
   };
 
   if (loading) {
@@ -178,6 +182,7 @@ const HotelForm = ({ match, history }) => {
           onChange={handleChange}
           disabled={disapled}
           defaultValue={hotel.hotel_name}
+          required
         />
         <TextField
           variant="outlined"
@@ -186,6 +191,7 @@ const HotelForm = ({ match, history }) => {
           defaultValue={hotel.street_address}
           onChange={handleChange}
           disabled={disapled}
+          required
         />
         <TextField
           variant="outlined"
@@ -194,6 +200,7 @@ const HotelForm = ({ match, history }) => {
           defaultValue={hotel.city}
           onChange={handleChange}
           disabled={disapled}
+          required
         />
 
         <TextField
@@ -203,6 +210,7 @@ const HotelForm = ({ match, history }) => {
           id="state"
           defaultValue={hotel.state}
           onChange={handleChange}
+          required
         />
         <TextField
           variant="outlined"
@@ -211,6 +219,7 @@ const HotelForm = ({ match, history }) => {
           id="zipcode"
           defaultValue={hotel.zipcode}
           onChange={handleChange}
+          required
         />
         <TextField
           variant="outlined"
@@ -219,6 +228,7 @@ const HotelForm = ({ match, history }) => {
           id="phone_number"
           defaultValue={hotel.phone_number}
           onChange={handleChange}
+          required
         />
 
         <TextField
@@ -322,6 +332,7 @@ const HotelForm = ({ match, history }) => {
           id="standard_count"
           defaultValue={hotel.standard_count}
           onChange={handleChange}
+          required
         />
         <TextField
           variant="outlined"
@@ -334,6 +345,7 @@ const HotelForm = ({ match, history }) => {
           InputProps={{
             startAdornment: <InputAdornment position="start">$</InputAdornment>
           }}
+          required
         />
         <TextField
           variant="outlined"
