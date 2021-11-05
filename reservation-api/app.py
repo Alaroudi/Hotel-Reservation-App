@@ -1,7 +1,7 @@
 from sqlalchemy.sql.functions import user
 from database import *
 from flask import Flask, request, abort, jsonify
-from flask_restful import Api, Resource
+from flask_restful import Api, Resource, reqparse
 from sqlalchemy.orm import sessionmaker
 from sqlacodegen.codegen import CodeGenerator
 from flask_cors import CORS
@@ -10,6 +10,19 @@ import io
 import os
 import sqlalchemy as sq
 import sys
+
+# set up request parser for POST
+reservation_args = reqparse.RequestParser()
+reservation_args.add_argument("user_id", type = int, help = "Enter the users ID. (int)", required = True)
+reservation_args.add_argument("hotel_id", type = int, help = "Enter the hotel ID. (int)", required = True)
+reservation_args.add_argument("check_in", type = str, help = "Enter the check_in of the reservation. (string)", required = True)
+reservation_args.add_argument("check_out", type = str, help = "Enter the check_out of the reservation. (string)", required = True)
+reservation_args.add_argument("total_price", type = int, help = "Enter the total price of the reservation (decimal number)", required = True)
+reservation_args.add_argument("reserved_standard_count", type = int, help = "Enter the number of standard rooms (int)", required = True)
+reservation_args.add_argument("reserved_queen_count", type = int, help = "Enter the number of queen rooms (int)", required = True)
+reservation_args.add_argument("reserved_king_count", type = int, help = "Enter the number of king rooms (int)", required = True)
+
+
 
 # global variable to set up session
 session = None
@@ -40,56 +53,90 @@ def generate_model(host, user, password, database, outfile=None):
     session = Session()
 
 
-def generate_hotel_name(hotel_id):
-    
-    try:
-       hotel_name = session.query(Hotel).filter(Hotel.hotel_id == hotel_id).first()
-    except sq.exc.DBAPIError as e:
-        session.rollback()
-        abort(500, description = "The database server is offline.")
-    
-    return hotel_name.hotel_name
-
-
 
 # function to set a valid json for user object
 # returns a list of dictionaries depending on the user query
 # outputs each user and reservation in this format:
 '''
-{
-    "user_id": 1,
-    "first_name": "John",
-    "last_name": "Doe",
-    "email": "John.Doe@yahoo.com",
-    "password": "1234",
-    "isAdmin": 0,
-    "phone_number": "210-222-2222",
-    "date_of_birth": 2000-12-12,
-    "reservations": [
-        {   
-            "reservation_id": 1,
-            "user_id": 1,
-            "hotel_id": 1,
-            "check_in": "2021-12-12",
-            "check_out": "2021-12-15",
-            "total_price": 100.56,
-            "reserved_standard_count": "1",
-            "reserved_queen_count": 0,
-            "reserved_king_count": 1
-        },
-        {
-            "reservation_id": 12,
-            "user_id": 1,
-            "hotel_id": 4,
-            "check_in": "2022-1-12",
-            "check_out": "2022-1-25",
-            "total_price": 1000.56,
-            "reserved_standard_count": "1",
-            "reserved_queen_count": 1,
-            "reserved_king_count": 12
-        }
-    ]
-}
+[
+    {
+        "user_id": 1,
+        "first_name": "Babara",
+        "last_name": "MacCaffrey",
+        "email": "barbara.Mac@gmail.com",
+        "password": "1234",
+        "isAdmin": 0,
+        "phone_number": "781-932-9754",
+        "date_of_birth": "1986-03-28",
+        "reservations": [
+            {
+                "reservation_id": 2,
+                "user_id": 1,
+                "check_in": "2021-11-14",
+                "check_out": "2021-11-17",
+                "total_price": 1000.5,
+                "reserved_standard_count": 5,
+                "reserved_queen_count": 10,
+                "reserved_king_count": 2,
+                "hotel_information": {
+                    "hotel_id": 1,
+                    "hotel_name": "The Magnolia All Suites",
+                    "street_address": "14187 Commercial Trail",
+                    "city": "Hampton",
+                    "state": "VA",
+                    "zipcode": 23452,
+                    "phone_number": "213-342-5433",
+                    "weekend_diff_percentage": 0.25,
+                    "number_of_rooms": 20,
+                    "amenities": [
+                        "Pool",
+                        "Gym",
+                        "Spa",
+                        "Business Office"
+                    ],
+                    "standard_count": 10,
+                    "standard_price": 100.0,
+                    "queen_count": 5,
+                    "queen_price": 150.0,
+                    "king_count": 5,
+                    "king_price": 250.0
+                }
+            },
+            {
+                "reservation_id": 5,
+                "user_id": 1,
+                "check_in": "2021-11-14",
+                "check_out": "2021-11-17",
+                "total_price": 1000.5,
+                "reserved_standard_count": 5,
+                "reserved_queen_count": 10,
+                "reserved_king_count": 2,
+                "hotel_information": {
+                    "hotel_id": 5,
+                    "hotel_name": "The Regency Rooms",
+                    "street_address": "7 Manley Drive",
+                    "city": "Chicago",
+                    "state": "IL",
+                    "zipcode": 54932,
+                    "phone_number": "876-462-1211",
+                    "weekend_diff_percentage": 0.25,
+                    "number_of_rooms": 20,
+                    "amenities": [
+                        "Pool",
+                        "Gym",
+                        "Spa",
+                        "Business Office"
+                    ],
+                    "standard_count": 10,
+                    "standard_price": 100.0,
+                    "queen_count": 5,
+                    "queen_price": 150.0,
+                    "king_count": 5,
+                    "king_price": 250.0
+                }
+            }
+        ]
+    },
 '''
 
 
@@ -120,70 +167,139 @@ def generate_user_entry(user_results):
     # return results
     return result_list
 
+# generates the list of attributes a hotel has
+'''
+"amenities": [
+                "Pool",
+                "Gym",
+                "Spa",
+                "Business Office"
+            ],
+'''
+def generate_amenities(hotel):
+    amenities = []
+    # check if hotel has pool
+    if hotel.Pool:
+        amenities.append("Pool")
+    # check if hotel has gym
+    if hotel.Gym:
+        amenities.append("Gym")
+    # check if hotel has spa
+    if hotel.Spa:
+        amenities.append("Spa")
+    # check if hotel has business office
+    if hotel[25]:
+        amenities.append("Business Office")
+    # check if hotel as wifi
+    if hotel.Wifi:
+        amenities.append("Wifi")
+    return amenities
+
+
 # function to set a valid json for a user_id
 # returns a list of dictionaries depending on the user_id query
 # outputs each reservastion in this format:
 '''
-{
-    [
-        {   
-            "reservation_id": 1,
-            "user_id": 1,
+[
+    {
+        "reservation_id": 2,
+        "user_id": 1,
+        "check_in": "2021-11-14",
+        "check_out": "2021-11-17",
+        "total_price": 1000.5,
+        "reserved_standard_count": 5,
+        "reserved_queen_count": 10,
+        "reserved_king_count": 2,
+        "hotel_information": {
             "hotel_id": 1,
-            "check_in": "2021-12-12",
-            "check_out": "2021-12-15",
-            "total_price": 100.56,
-            "reserved_standard_count": "1",
-            "reserved_queen_count": 0,
-            "reserved_king_count": 1
-        },
-        {
-            "reservation_id": 12,
-            "user_id": 1,
-            "hotel_id": 4,
-            "hotel_name": ....
-            "check_in": "2022-1-12",
-            "check_out": "2022-1-25",
-            "total_price": 1000.56,
-            "reserved_standard_count": "1",
-            "reserved_queen_count": 1,
-            "reserved_king_count": 12
+            "hotel_name": "The Magnolia All Suites",
+            "street_address": "14187 Commercial Trail",
+            "city": "Hampton",
+            "state": "VA",
+            "zipcode": 23452,
+            "phone_number": "213-342-5433",
+            "weekend_diff_percentage": 0.25,
+            "number_of_rooms": 20,
+            "amenities": [
+                "Pool",
+                "Gym",
+                "Spa",
+                "Business Office"
+            ],
+            "standard_count": 10,
+            "standard_price": 100.0,
+            "queen_count": 5,
+            "queen_price": 150.0,
+            "king_count": 5,
+            "king_price": 250.0
         }
-    ]
-}
+    }
+]
 '''
-
-
 def generate_reservation_entry(user_id):
+
     try:
-        user_reservation = session.query(Reservation).filter(Reservation.user_id == user_id).order_by(Reservation.reservation_id).all()
+
+        command = f"""select * from reservations, hotel
+where reservations.user_id = \"{user_id}\" and hotel.hotel_id = reservations.hotel_id"""
+        
+        user_reservation = session.execute(command)
+        # set up list to return
+        result_list = []
+        for res in user_reservation:
+
+            # set up dictionary to be added to result list
+            new_entry = {}
+            hotel_info = {}
+            
+            # enter each respective variable into the dictionary
+            new_entry["reservation_id"] = res.reservation_id
+            new_entry["user_id"] = res.user_id
+            new_entry["check_in"] = str(res.check_in)
+            new_entry["check_out"] = str(res.check_out)
+            new_entry["total_price"] = float(res.total_price)
+            new_entry["reserved_standard_count"] = res.reserved_standard_count
+            new_entry["reserved_queen_count"] = res.reserved_queen_count
+            new_entry["reserved_king_count"] = res.reserved_king_count
+
+            # enter the info for the hotel
+            hotel_info["hotel_id"] = res.hotel_id
+            hotel_info["hotel_name"] = res.hotel_name
+            hotel_info["street_address"] = res.street_address
+            hotel_info["city"] = res.city
+            hotel_info["state"] = res.state
+            hotel_info["zipcode"] = res.zipcode
+            hotel_info["phone_number"] = res.phone_number
+            hotel_info["weekend_diff_percentage"] = float(res.weekend_diff_percentage)
+            # calculate total number of rooms
+            num_standard = res.standard_count
+            num_queen = res.queen_count
+            num_king = res.king_count
+            total_rooms = num_standard + num_queen + num_king
+            hotel_info["number_of_rooms"] = total_rooms
+            # set up amenities list
+            amenities_list = generate_amenities(res)
+            hotel_info["amenities"] = amenities_list
+            # set up room_types list
+            hotel_info["standard_count"] = res.standard_count
+            hotel_info["standard_price"] = float(res.standard_price)
+            hotel_info["queen_count"] = res.queen_count
+            hotel_info["queen_price"] = float(res.queen_price)
+            hotel_info["king_count"] = res.king_count
+            hotel_info["king_price"] = float(res.king_price)
+
+            new_entry["hotel_information"] = hotel_info
+
+            # append the new_entry into results if it is not already added
+            if new_entry not in result_list:
+                result_list.append(new_entry)
+
     except sq.exc.DBAPIError as e:
         session.rollback()
-        abort(500, description = "The database server is offline.")
-        
-    # set up list to return
-    result_list = []
-    for res in user_reservation:
-        # set up dictionary to be added to result list
-        new_entry = {}
-        
-        # enter each respective variable into the dictionary
-        new_entry["reservation_id"] = res.reservation_id
-        new_entry["user_id"] = res.user_id
-        new_entry["hotel_id"] = res.hotel_id
-        new_entry["hotel_name"] = generate_hotel_name(new_entry["hotel_id"])
-        new_entry["check_in"] = str(res.check_in)
-        new_entry["check_out"] = str(res.check_out)
-        new_entry["total_price"] = float(res.total_price)
-        new_entry["reserved_standard_count"] = res.reserved_standard_count
-        new_entry["reserved_queen_count"] = res.reserved_queen_count
-        new_entry["reserved_king_count"] = res.reserved_king_count
-
-        # append the new_entry into results if it is not already added
-        if new_entry not in result_list:
-            result_list.append(new_entry)
+        return e
     # return results
     return result_list
+
 
 
 
@@ -198,40 +314,44 @@ class AllReservations(Resource):
         # query to get all hotels
         try:
             all_users = session.query(User).order_by(User.user_id).all()
+            
+            # generate a list from hotels
+            result = generate_user_entry(all_users)
+
+            # if there are no hotels, show error
+            if not result:
+                abort(404, description="There are no users in the database.")
+        # return the results
         except sq.exc.DBAPIError as e:
             session.rollback()
-            abort(500, description = "The database server is offline.")
+            return e
 
-        # generate a list from hotels
-        result = generate_user_entry(all_users)
-
-        # if there are no hotels, show error
-        if not result:
-            abort(404, description="There are no users in the database.")
-        # return the results
         return result
 
     def post(self):
-
-        user_id = request.json["user_id"]
-        hotel_id = request.json["hotel_id"]
-        check_in = request.json["check_in"]
-        check_out = request.json["check_out"]
-        total_price = request.json["total_price"]
-        standard = request.json["reserved_standard_count"]
-        queen = request.json["reserved_queen_count"]
-        king = request.json["reserved_king_count"]
-        
-        new_reservation = Reservation( user_id = user_id, hotel_id = hotel_id, check_in = check_in, check_out = check_out,
-                                                    total_price = total_price, reserved_standard_count = standard,
-                                                     reserved_queen_count = queen, reserved_king_count = king)
         try:
+            #checks to see if there are the proper arguments
+            args = reservation_args.parse_args()
+            # gets the reservation information
+            user_id = request.json["user_id"]
+            hotel_id = request.json["hotel_id"]
+            check_in = request.json["check_in"]
+            check_out = request.json["check_out"]
+            total_price = request.json["total_price"]
+            standard = request.json["reserved_standard_count"]
+            queen = request.json["reserved_queen_count"]
+            king = request.json["reserved_king_count"]
+            # make insert statement for the database
+            new_reservation = Reservation( user_id = user_id, hotel_id = hotel_id, check_in = check_in, check_out = check_out,
+                                                        total_price = total_price, reserved_standard_count = standard,
+                                                        reserved_queen_count = queen, reserved_king_count = king)
+            # que the insert and commit the changes
             session.add(new_reservation)
             session.commit()
 
         except sq.exc.DBAPIError as e:
             session.rollback()
-            abort(500, description = "The database server is offline.")
+            return e
 
         return {
             "message":
@@ -268,24 +388,22 @@ class SingleBooking(Resource):
     def delete(self, reservation_id):
         try:
             result = session.query(Reservation).get(reservation_id)
-        except sq.exc.DBAPIError as e:
-            session.rollback()
-            abort(500, description = "The database server is offline.")
-        
-        if not result:
-            abort(
-                404,
-                description=
-                f"Reservation ID {reservation_id} does not exist in the database."
-            )
+            
+            
+            if not result:
+                abort(
+                    404,
+                    description=
+                    f"Reservation ID {reservation_id} does not exist in the database."
+                )
 
-        try:
+        
             session.delete(result)
             session.commit()
+
         except sq.exc.DBAPIError as e:
             session.rollback()
-            abort(500, description = "The database server is offline.")
-        
+            return e    
         # return message on success
         return {
             "message":
@@ -295,26 +413,33 @@ class SingleBooking(Resource):
     def put(self, reservation_id):
         
         try:
+            # finds the reservation based on reservation ID
             result = session.query(Reservation).get(reservation_id)
-        except sq.exc.DBAPIError as e:
-            session.rollback()
-            abort(500, description = "The database server is offline.")
+            # if it doesn't exsist error
+            if not result:
+                abort(
+                    404,
+                    description=
+                    f"Reservation ID {reservation_id} does not exist in the database."
+                )
+            # checks to see if the necessary argument have been passed 
+            args = reservation_args.parse_args()
 
-        info_update = request.json()
-        
-        if not result:
-            abort(
-                404,
-                description=
-                f"Reservation ID {reservation_id} does not exist in the database."
-            )
-        
-        
-        try:
+            result.user_id = request.json["user_id"]
+            result.hotel_id = request.json["hotel_id"]
+            result.check_in = request.json["check_in"]
+            result.check_out = request.json["check_out"]
+            result.total_price = request.json["total_price"]
+            result.standard = request.json["reserved_standard_count"]
+            result.queen = request.json["reserved_queen_count"]
+            result.king = request.json["reserved_king_count"]
+            
+            # update the information in the entry
             session.commit()
+        
         except sq.exc.DBAPIError as e:
             session.rollback()
-            abort(500, description = "The database server is offline.")
+            return e
 
         # return message on success
         return {
