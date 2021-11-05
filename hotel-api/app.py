@@ -11,49 +11,25 @@ import os
 import sqlalchemy as sq
 import sys
 
-# set up request parser for POST
-hotel_post_args = reqparse.RequestParser()
-hotel_post_args.add_argument("hotel_name", type = str, help = "Enter the name of the hotel. (string)", required = True)
-hotel_post_args.add_argument("street_address", type = str, help = "Enter the street address of the hotel. (string)", required = True)
-hotel_post_args.add_argument("city", type = str, help = "Enter the city of the hotel. (string)", required = True)
-hotel_post_args.add_argument("state", type = str, help = "Enter the state of the hotel. (2-character string)", required = True)
-hotel_post_args.add_argument("zipcode", type = int, help = "Enter the zipcode of the hotel. (5-digit int)", required = True)
-hotel_post_args.add_argument("phone_number", type = str, help = "Enter phone number name of the hotel. (string)", required = True)
-hotel_post_args.add_argument("weekend_diff_percentage", type = float, help = "Enter the price differential for the weekend of the hotel. (decimal number)", required = True)
-hotel_post_args.add_argument("standard_count", type = int, help = "Enter number of standard rooms. (int)", required = True)
-hotel_post_args.add_argument("Pool", type = Boolean, help = "Enter true or false for Pool. (Boolean)", required = True)
-hotel_post_args.add_argument("Spa", type = Boolean, help = "Enter true or false for Spa. (Boolean)", required = True)
-hotel_post_args.add_argument("Gym", type = Boolean, help = "Enter true or false for Gym. (Boolean)", required = True)
-hotel_post_args.add_argument("Wifi", type = Boolean, help = "Enter true or false for Wifi. (Boolean)", required = True)
-hotel_post_args.add_argument("Bussiness_Office", type = Boolean, help = "Enter true or false for Bussiness_Office. (Boolean)", required = True)
-hotel_post_args.add_argument("queen_count", type = int, help = "Enter number of queen rooms. (int)", required = True)
-hotel_post_args.add_argument("queen_price", type = float, help = "Enter price of queen rooms. (float)", required = True)
-hotel_post_args.add_argument("king_count", type = int, help = "Enter number of king rooms. (int)", required = True)
-hotel_post_args.add_argument("king_price", type = float, help = "Enter price of king rooms. (float)", required = True)
-
-# set up request parser for PUT
-hotel_put_args = reqparse.RequestParser()
-hotel_put_args.add_argument("hotel_name", type = str, help = "Enter the name of the hotel. (string)", required=True)
-hotel_put_args.add_argument("street_address", type = str, help = "Enter the street address of the hotel. (string)", required=True)
-hotel_put_args.add_argument("city", type = str, help = "Enter the city of the hotel. (string)", required=True)
-hotel_put_args.add_argument("state", type = str, help = "Enter the state of the hotel. (2-character string)", required=True)
-hotel_put_args.add_argument("zipcode", type = int, help = "Enter the zipcode of the hotel. (5-digit int)", required=True)
-hotel_put_args.add_argument("phone_number", type = str, help = "Enter phone number name of the hotel. (string)", required=True)
-hotel_put_args.add_argument("weekend_diff_percentage", type = float, help = "Enter the price differential for the weekend of the hotel. (decimal number)", required=True)
-hotel_put_args.add_argument("Pool", type = Boolean, help = "Enter true or false for Pool. (Boolean)", required=True)
-hotel_put_args.add_argument("Spa", type = Boolean, help = "Enter true or false for Spa. (Boolean)", required=True)
-hotel_put_args.add_argument("Gym", type = Boolean, help = "Enter true or false for Gym. (Boolean)", required=True)
-hotel_put_args.add_argument("Wifi", type = Boolean, help = "Enter true or false for Wifi. (Boolean)", required=True)
-hotel_put_args.add_argument("Bussiness_Office", type = Boolean, help = "Enter true or false for Bussiness_Office. (Boolean)", required=True)
-hotel_put_args.add_argument("standard_count", type = int, help = "Enter number of standard rooms. (int)", required=True)
-hotel_put_args.add_argument("standard_price", type = float, help = "Enter price of standard rooms. (float)", required=True)
-hotel_put_args.add_argument("queen_count", type = int, help = "Enter number of queen rooms. (int)", required=True)
-hotel_put_args.add_argument("queen_price", type = float, help = "Enter price of queen rooms. (float)", required=True)
-hotel_put_args.add_argument("king_count", type = int, help = "Enter number of king rooms. (int)", required=True)
-hotel_put_args.add_argument("king_price", type = float, help = "Enter price of king rooms. (float)", required=True)
-
-# set up list for valid amenities
-valid_amenities = ["Pool", "Gym", "Spa", "Business Office", "Wifi"]
+# set up request parser for POST or PUT for a hotel
+hotel_args = reqparse.RequestParser()
+hotel_args.add_argument("hotel_name", type = str, help = "Enter the name of the hotel. (string)", required = True)
+hotel_args.add_argument("street_address", type = str, help = "Enter the street address of the hotel. (string)", required = True)
+hotel_args.add_argument("city", type = str, help = "Enter the city of the hotel. (string)", required = True)
+hotel_args.add_argument("state", type = str, help = "Enter the state of the hotel. (2-character string)", required = True)
+hotel_args.add_argument("zipcode", type = int, help = "Enter the zipcode of the hotel. (5-digit int)", required = True)
+hotel_args.add_argument("phone_number", type = str, help = "Enter phone number name of the hotel. (string)", required = True)
+hotel_args.add_argument("weekend_diff_percentage", type = float, help = "Enter the price differential for the weekend of the hotel. (decimal number)", required = True)
+hotel_args.add_argument("standard_count", type = int, help = "Enter number of standard rooms. (int)", required = True)
+hotel_args.add_argument("Pool", type = Boolean, help = "Enter true or false for Pool. (Boolean)", required = True)
+hotel_args.add_argument("Spa", type = Boolean, help = "Enter true or false for Spa. (Boolean)", required = True)
+hotel_args.add_argument("Gym", type = Boolean, help = "Enter true or false for Gym. (Boolean)", required = True)
+hotel_args.add_argument("Wifi", type = Boolean, help = "Enter true or false for Wifi. (Boolean)", required = True)
+hotel_args.add_argument("Bussiness_Office", type = Boolean, help = "Enter true or false for Bussiness_Office. (Boolean)", required = True)
+hotel_args.add_argument("queen_count", type = int, help = "Enter number of queen rooms. (int)", required = True)
+hotel_args.add_argument("queen_price", type = float, help = "Enter price of queen rooms. (float)", required = True)
+hotel_args.add_argument("king_count", type = int, help = "Enter number of king rooms. (int)", required = True)
+hotel_args.add_argument("king_price", type = float, help = "Enter price of king rooms. (float)", required = True)
 
 # global variable to set up session
 session = None
@@ -268,7 +244,7 @@ class AllHotels(Resource):
     # function to add a new hotel to the database
     def post(self):
         # check to see if the required arguments are passed
-        args = hotel_post_args.parse_args()
+        args = hotel_args.parse_args()
         # store each token into a variable
         hotel_name = request.json["hotel_name"]
         street_address = request.json["street_address"]
@@ -282,9 +258,11 @@ class AllHotels(Resource):
         else:
             if result:
                 # if it already exists, show error message
-                abort(400, f"This hotel already exists in the database. (Hotel ID {result.hotel_id})")
+                abort(400, description = f"This hotel already exists in the database. (Hotel ID {result.hotel_id})")
             city = request.json["city"]
             state = request.json["state"]
+            if len(state) != 2:
+                abort(400, description = f"This state is not valid. State expects 2 characters. (State {state})")
             zipcode = request.json["zipcode"]
             phone_number = request.json["phone_number"]
             weekend_diff_percentage = request.json["weekend_diff_percentage"]
@@ -346,7 +324,7 @@ class SingleHotel(Resource):
             abort(500, description = "The database server is offline.")
         else:
             # get the args from the request
-            args = hotel_put_args.parse_args()
+            args = hotel_args.parse_args()
 
             # if there is no instance that matches the ID, show error message
             if not hotel:
@@ -355,7 +333,10 @@ class SingleHotel(Resource):
             # check to see which arguments have values
             hotel.hotel_name = request.json["hotel_name"]       
             hotel.street_address = request.json["street_address"]       
-            hotel.city = request.json["city"]    
+            hotel.city = request.json["city"]
+            state = request.json["state"]
+            if len(state) != 2:
+                abort(400, description = f"This state is not valid. State expects 2 characters. (State {state})")
             hotel.state = request.json["state"]    
             hotel.zipcode = request.json["zipcode"] 
             hotel.phone_number = request.json["phone_number"]
@@ -442,64 +423,42 @@ class SingleHotel(Resource):
 # hotel_reservation_results = session.query(Hotel, Reservation)....
 ## function to generate a valid json object for a hotel entry
 # returns a list of dictionaries depending on the hotel_results query and reservation query
-def generate_availability_entry(hotel_reservation_all, hotel_reservation_date_match):
+def generate_availability_entry(hotel_availability_results):
     # set up list to return
     result_list = []
-    reserved_dict = {}
-    # first loop to tally up the number of reserved rooms per hotel
-    for hotel, reservation in hotel_reservation_date_match:
-        # if the reservation is for the hotel, update the information
-        if hotel.hotel_id == reservation.hotel_id:
-            # if the hotel's information hasn't been initialized, initialize it
-            if hotel.hotel_id not in reserved_dict:
-                information_dict = {}
-                information_dict["Standard"] = hotel.standard_count
-                information_dict["Queen"] = hotel.queen_count
-                information_dict["King"] = hotel.king_count
-                reserved_dict[hotel.hotel_id] = information_dict
-            # update the number of available rooms for the hotel
-            reserved_dict[hotel.hotel_id]["Standard"] = reserved_dict[hotel.hotel_id]["Standard"] - reservation.reserved_standard_count
-            reserved_dict[hotel.hotel_id]["Queen"] = reserved_dict[hotel.hotel_id]["Queen"] - reservation.reserved_queen_count
-            reserved_dict[hotel.hotel_id]["King"] = reserved_dict[hotel.hotel_id]["King"] - reservation.reserved_king_count
-    # second loop to make the entries
-    for hotel, reservation in hotel_reservation_all:
-        # set up dictionary to be added to result list
+    # loop through and make the json entries
+    for result in hotel_availability_results:
+        # set up dictionary for new entry
         new_entry = {}
-        # enter each respective variable into the dictionary
-        new_entry["hotel_id"] = hotel.hotel_id
-        new_entry["hotel_name"] = hotel.hotel_name
-        new_entry["street_address"] = hotel.street_address
-        new_entry["city"] = hotel.city
-        new_entry["state"] = hotel.state
-        new_entry["zipcode"] = hotel.zipcode
-        new_entry["phone_number"] = hotel.phone_number
-        new_entry["weekend_diff_percentage"] = float(hotel.weekend_diff_percentage)
-        # calculate total number of rooms
-        if hotel.hotel_id in reserved_dict:
-            # if the there were reservations in the hotel, update the output to reflect them
-            num_standard = reserved_dict[hotel.hotel_id]["Standard"]
-            num_queen = reserved_dict[hotel.hotel_id]["Queen"]
-            num_king = reserved_dict[hotel.hotel_id]["King"]
-        else:
-            # if there were no reservations in the hotel, keep the output the default number of rooms
-            num_standard = hotel.standard_count
-            num_queen = hotel.queen_count
-            num_king = hotel.king_count
-        total_available_rooms = num_standard + num_queen + num_king
-        new_entry["number_of_available_rooms"] = total_available_rooms
+        # get all the relevant data from the set
+        new_entry["hotel_id"] = result.hotel_id
+        new_entry["hotel_name"] = result.hotel_name
+        new_entry["street_address"] = result.street_address
+        new_entry["city"] = result.city
+        new_entry["state"] = result.state
+        new_entry["zipcode"] = result.zipcode
+        new_entry["phone_number"] = result.phone_number
+        new_entry["weekend_diff_percentage"] = float(result.weekend_diff_percentage)
+        available_rooms = int(result.available_standard_count + result.available_queen_count + result.available_king_count)
+        new_entry["number_of_available_rooms"] = available_rooms
         # set up amenities list
-        amenities_list = generate_amenities(hotel)
-        new_entry["amenities"] = amenities_list
-        new_entry["standard_count"] = num_standard
-        new_entry["standard_price"] = float(hotel.standard_price)
-        new_entry["queen_count"] = num_queen
-        new_entry["queen_price"] = float(hotel.queen_price)
-        new_entry["king_count"] = num_king
-        new_entry["king_price"] = float(hotel.king_price)
-        # append the new_entry into results if it is not already added
+        amenities_list = []
+        # for some reason, the Bussiness Office variable in this query uses a space instead of an underscore like the other queries
+        # have to manually index the variable
+        # 16 is Bussiness Office
+        new_entry["Pool"] = result.Pool
+        new_entry["Gym"] = result.Gym
+        new_entry["Spa"] = result.Spa
+        new_entry["Business Office"] = result[16]
+        new_entry["Wifi"] = result.Wifi
+        new_entry["available_standard_count"] = int(result.available_standard_count)
+        new_entry["standard_price"] = float(result.standard_price)
+        new_entry["available_queen_count"] = int(result.available_queen_count)
+        new_entry["queen_price"] = float(result.queen_price)
+        new_entry["available_king_price"] = int(result.available_king_count)
+        new_entry["king_price"] = float(result.king_price)
         if new_entry not in result_list:
             result_list.append(new_entry)
-    # return results
     return result_list
 
 ## ---------- Availability ---------- ##
@@ -512,27 +471,47 @@ class HotelAvailability(Resource):
         args = request.args
         # we expect city, check_in, and check_out
         try:
-            city = args["city"]
-            check_in = args["check_in"]
-            check_out = args["check_out"]
+            city = str(args["city"])
+            # if there is an underscore in the city, change that to a space
+            if "+" in city:
+                city = city.replace("+", " ")
+            check_in = str(args["check_in"])
+            check_out = str(args["check_out"])
         # if the request does not have all three, abort with 400
         except:
             abort(400, description = "Must provide for city, check_in, and check_out.")
         else:
-            try:
-                # find all the hotels in that city
-                hotel_reservation_all = session.query(Hotel, Reservation).filter(Hotel.city == city).all()
-                # find all the hotels that have check in and check out on the given days in that city
-                hotel_reservation_date_match = session.query(Hotel, Reservation).filter((Hotel.city == city) & 
-                                                                                     (Reservation.check_in >= check_in) & 
-                                                                                     (Reservation.check_out <= check_out)).all()
-            except sq.exc.DBAPIError as e:
-                abort(500, description = "The database is offline.")
+            # query to find the hotels that match the city, check_in, and check_out
+            query_text = f'''select hotel.*,  CASE WHEN ava.available_standard_count is NULL THEN hotel.standard_count else ava.available_standard_count END as available_standard_count,
+CASE WHEN ava.available_queen_count is NULL THEN hotel.queen_count else ava.available_queen_count END as available_queen_count,
+CASE WHEN ava.available_king_count  is NULL THEN hotel.king_count else ava.available_king_count  END as available_king_count
+from  hotel 
+left join 
+(SELECT res.hotel_id, res.hotel_name, res.standard_count, res.queen_count, res.king_count,
+Total_reserved_standard_count, Total_reserved_queen_count, Total_reserved_king_count,
+(res.standard_count - res.Total_reserved_standard_count) AS available_standard_count,
+(res.queen_count - res.Total_reserved_queen_count) AS available_queen_count, 
+(res.king_count - res.Total_reserved_king_count) as available_king_count 
+FROM 
+(SELECT hotel.*, sum(reserved_standard_count) AS Total_reserved_standard_count, sum(reserved_queen_count) as Total_reserved_queen_count
+, sum(reserved_king_count) AS Total_reserved_king_count
+FROM reservations
+JOIN hotel ON reservations.hotel_id = hotel.hotel_id
+where reservations.check_out > \"{check_in}\" and  reservations.check_in < \"{check_out}\"
+GROUP BY hotel_id) 
+ AS res) 
+ as ava  on hotel.hotel_id = ava.hotel_id where hotel.city = \"{city}\";'''
+            query_results = session.execute(query_text)
+            results = generate_availability_entry(query_results)
+            # if there are no results that match the query
+            if not results:
+                # generate 404 message
+                abort(404, description  = f"There are no hotels in that match that query. (City {city} Check in {check_in} Check out {check_out}")
+            # if there is only one hotel that matches
+            if len(results) == 1:
+                return results[0]
+            # if there is more than one hotel that matches
             else:
-                # if there are no hotels, show error
-                if not hotel_reservation_all:
-                    abort(400, description  = f"There are no hotels that are in that city ({city}).")
-                results = generate_availability_entry(hotel_reservation_all, hotel_reservation_date_match)
                 return results
 
 # add to each class to API
