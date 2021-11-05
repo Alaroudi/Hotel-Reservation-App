@@ -472,7 +472,7 @@ class HotelAvailability(Resource):
         # we expect city, check_in, and check_out
         try:
             city = str(args["city"])
-            # if there is an underscore in the city, change that to a space
+            # if there is a + sign in the city, change that to a space
             if "+" in city:
                 city = city.replace("+", " ")
             check_in = str(args["check_in"])
@@ -506,7 +506,7 @@ GROUP BY hotel_id)
             # if there are no results that match the query
             if not results:
                 # generate 404 message
-                abort(404, description  = f"There are no hotels in that match that query. (City {city} Check in {check_in} Check out {check_out}")
+                abort(404, description  = f"There are no hotels in that match that query. (City {city} Check in {check_in} Check out {check_out})")
             # if there is only one hotel that matches
             if len(results) == 1:
                 return results[0]
