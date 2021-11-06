@@ -420,13 +420,6 @@ def generate_availability_entry(hotel_availability_results):
         new_entry["zipcode"] = result.zipcode
         new_entry["phone_number"] = result.phone_number
         new_entry["weekend_diff_percentage"] = float(result.weekend_diff_percentage)
-        available_rooms = int(result.available_standard_count + result.available_queen_count + result.available_king_count)
-        new_entry["number_of_available_rooms"] = available_rooms
-        # set up amenities list
-        amenities_list = []
-        # for some reason, the Bussiness Office variable in this query uses a space instead of an underscore like the other queries
-        # have to manually index the variable
-        # 16 is Bussiness Office
         new_entry["Pool"] = result.Pool
         new_entry["Gym"] = result.Gym
         new_entry["Spa"] = result.Spa
@@ -476,12 +469,13 @@ Total_reserved_standard_count, Total_reserved_queen_count, Total_reserved_king_c
 FROM 
 (SELECT hotel.*, sum(reserved_standard_count) AS Total_reserved_standard_count, sum(reserved_queen_count) as Total_reserved_queen_count
 , sum(reserved_king_count) AS Total_reserved_king_count
-FROM reservations
+FROM hotel_reservation.reservations
 JOIN hotel ON reservations.hotel_id = hotel.hotel_id
-where reservations.check_out > \"{check_in}\" and  reservations.check_in < \"{check_out}\"
+where reservations.check_out > \'{check_in}\' and  reservations.check_in < \'{check_out}\'
 GROUP BY hotel_id) 
  AS res) 
- as ava  on hotel.hotel_id = ava.hotel_id where hotel.city = \"{city}\";'''
+ as ava  on hotel.hotel_id = ava.hotel_id where hotel.city = \"{city}\";
+'''
             try:
                 query_results = session.execute(query_text)
             except sq.exc.DBAPIError as e:
