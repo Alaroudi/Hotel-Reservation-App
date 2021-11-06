@@ -5,6 +5,7 @@ from flask_cors import CORS
 from flask_restful import Api, Resource, reqparse
 from sqlalchemy.orm import sessionmaker
 from sqlacodegen.codegen import CodeGenerator
+from werkzeug.exceptions import BadRequestKeyError
 import dotenv
 import io
 import os
@@ -249,13 +250,9 @@ class AllHotels(Resource):
         hotel_name = request.json["hotel_name"]
         street_address = request.json["street_address"]
         city = request.json["city"]
-        # check if this hotel already exists in the database
         try:
+            # check if this hotel already exists in the database
             result = session.query(Hotel).filter((Hotel.hotel_name == hotel_name) & (Hotel.street_address == street_address) & (Hotel.city == city)).first()
-        except sq.exc.DBAPIError as e:
-            session.rollback()
-            abort(500, description = "The database server is offline.")
-        else:
             if result:
                 # if it already exists, show error message
                 abort(400, description = f"This hotel already exists in the database. (Hotel ID {result.hotel_id})")
@@ -281,48 +278,43 @@ class AllHotels(Resource):
             # generate the new Hotel object
 
             new_hotel = Hotel(hotel_name = hotel_name,
-                      street_address = street_address,
-                      city = city,
-                      state = state, 
-                      zipcode = zipcode, 
-                      phone_number = phone_number, 
-                      standard_count = standard_count, 
-                      queen_count = queen_count, 
-                      king_count = king_count,
-                      standard_price = standard_price, 
-                      queen_price = queen_price, 
-                      king_price = king_price, 
-                      Pool = Pool, 
-                      Gym = Gym,
-                      Spa = Spa,
-                      Bussiness_Office = Bussiness_Office, 
-                      Wifi = Wifi, 
-                      weekend_diff_percentage = weekend_diff_percentage)
+                        street_address = street_address,
+                        city = city,
+                        state = state, 
+                        zipcode = zipcode, 
+                        phone_number = phone_number, 
+                        standard_count = standard_count, 
+                        queen_count = queen_count, 
+                        king_count = king_count,
+                        standard_price = standard_price, 
+                        queen_price = queen_price, 
+                        king_price = king_price, 
+                        Pool = Pool, 
+                        Gym = Gym,
+                        Spa = Spa,
+                        Bussiness_Office = Bussiness_Office, 
+                        Wifi = Wifi, 
+                        weekend_diff_percentage = weekend_diff_percentage)
 
             
             # add and commit the new hotel to database
-            try:
-                session.add(new_hotel)
-                session.commit()
-            except sq.exc.DBAPIError as e:
-                session.rollback()
-                abort(500, description = "The database server is offline.")
-            else:
-                # return success message
-                return {"message": f"Hotel ID {new_hotel.hotel_id} was successfully added to the database."}
+            session.add(new_hotel)
+            session.commit()
+        except sq.exc.DBAPIError as e:
+            session.rollback()
+            abort(500, description = "The database server is offline.")
+        else:
+            # return success message
+            return {"message": f"Hotel ID {new_hotel.hotel_id} was successfully added to the database."}
 
 # class for interacting with one hotel in the database
 class SingleHotel(Resource):
 
     # function to update information for a single hotel from the database by ID number
     def put(self, hotel_id):
-        # select the correct instance
         try:
+            # select the correct instance
             hotel = session.query(Hotel).get(hotel_id)
-        except sq.exc.DBAPIError as e:
-            session.rollback()
-            abort(500, description = "The database server is offline.")
-        else:
             # get the args from the request
             args = hotel_args.parse_args()
 
@@ -354,52 +346,41 @@ class SingleHotel(Resource):
             hotel.king_price = request.json["king_price"]
 
             # commit the changes to the database
-            try:
-                session.commit()
-            except sq.exc.DBAPIError as e:
-                session.rollback()
-                abort(500, description = "%s" % e)
-            else:
-                # then return the new hotel
-                try:
-                    hotels = session.query(Hotel).filter(Hotel.hotel_id == hotel_id).all()
-                except sq.exc.DBAPIError as e:
-                    session.rollback()
-                    abort(500, description = "The database server is offline.")
-                else:
-                    # generate a list from hotels
-                    result = generate_hotel_entry(hotels)
-                    
-                    # if there are no hotels, show error
-                    if not result:
-                        abort(404, description  = f"Hotel ID {hotel_id} does not exist in the database.")
-                    
-                    # return the result
-                    return result[0]
-    
-    # function to delete a single hotel from the database by ID number
-    def delete(self, hotel_id):
-        # select the correct instance
-        try:
-            result = session.query(Hotel).get(hotel_id)
+            session.commit()
         except sq.exc.DBAPIError as e:
             session.rollback()
             abort(500, description = "The database server is offline.")
         else:
+            # then return the new hotel
+            hotels = session.query(Hotel).filter(Hotel.hotel_id == hotel_id).all()
+            # generate a list from hotels
+            result = generate_hotel_entry(hotels)
+            
+            # if there are no hotels, show error
+            if not result:
+                abort(404, description  = f"Hotel ID {hotel_id} does not exist in the database.")
+            
+            # return the result
+            return result[0]
+    
+    # function to delete a single hotel from the database by ID number
+    def delete(self, hotel_id):
+        try:
+            # select the correct instance
+            result = session.query(Hotel).get(hotel_id)
             # if there is no instance that matches the ID, show error message
             if not result:
                 abort(404, description  = f"Hotel ID {hotel_id} does not exist in the database.")
             
             # delete the hotel and commit
-            try:
-                session.delete(result)
-                session.commit()
-            except sq.exc.DBAPIError as e:
-                session.rollback()
-                abort(500, description = "The database server is offline.")
-            else:
-                # return message on success
-                return {"message": f"Hotel ID {hotel_id} was successfully deleted."}
+            session.delete(result)
+            session.commit()
+        except sq.exc.DBAPIError as e:
+            session.rollback()
+            abort(500, description = "The database server is offline.")
+        else:
+            # return message on success
+            return {"message": f"Hotel ID {hotel_id} was successfully deleted."}
     
     # function to get a single hotel from the database by ID number
     def get(self, hotel_id):
@@ -478,8 +459,8 @@ class HotelAvailability(Resource):
             check_in = str(args["check_in"])
             check_out = str(args["check_out"])
         # if the request does not have all three, abort with 400
-        except:
-            abort(400, description = "Must provide for city, check_in, and check_out.")
+        except BadRequestKeyError as e:
+            abort(400, description = "Must provide city, check_in, and check_out.")
         else:
             # query to find the hotels that match the city, check_in, and check_out
             query_text = f'''select hotel.*,  CASE WHEN ava.available_standard_count is NULL THEN hotel.standard_count else ava.available_standard_count END as available_standard_count,
@@ -501,17 +482,18 @@ where reservations.check_out > \"{check_in}\" and  reservations.check_in < \"{ch
 GROUP BY hotel_id) 
  AS res) 
  as ava  on hotel.hotel_id = ava.hotel_id where hotel.city = \"{city}\";'''
-            query_results = session.execute(query_text)
-            results = generate_availability_entry(query_results)
-            # if there are no results that match the query
-            if not results:
-                # generate 404 message
-                abort(404, description  = f"There are no hotels in that match that query. (City {city} Check in {check_in} Check out {check_out})")
-            # if there is only one hotel that matches
-            if len(results) == 1:
-                return results[0]
-            # if there is more than one hotel that matches
+            try:
+                query_results = session.execute(query_text)
+            except sq.exc.DBAPIError as e:
+                session.rollback()
+                abort(500, description = "The database server is offline.")
             else:
+                results = generate_availability_entry(query_results)
+                # if there are no results that match the query
+                if not results:
+                    # generate 404 message
+                    abort(404, description  = f"There are no hotels in that match that query. (City {city} Check in {check_in} Check out {check_out})")
+                # if there is only one hotel that matches
                 return results
 
 # add to each class to API
