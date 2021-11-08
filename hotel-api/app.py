@@ -5,6 +5,7 @@ from flask_cors import CORS
 from flask_restful import Api, Resource, reqparse
 from sqlalchemy.orm import sessionmaker
 from sqlacodegen.codegen import CodeGenerator
+from werkzeug.exceptions import BadRequestKeyError
 import dotenv
 import io
 import os
@@ -31,7 +32,7 @@ hotel_args.add_argument("queen_price", type = float, help = "Enter price of quee
 hotel_args.add_argument("king_count", type = int, help = "Enter number of king rooms. (int)", required = True)
 hotel_args.add_argument("king_price", type = float, help = "Enter price of king rooms. (float)", required = True)
 
-# global variable to set up engine
+# global variable to set up session
 engine = None
 
 # load Flask and API
@@ -53,7 +54,6 @@ def generate_model(host, user, password, database, outfile = None):
         # generate code and output to outfile
         generator = CodeGenerator(metadata)
         generator.render(outfile)
-
     except sq.exc.DBAPIError as e:
         abort(500, description = "The database is offline.")
 
@@ -240,21 +240,20 @@ class AllHotels(Resource):
             
             # return the results
             return result
-        # close the session
         finally:
             session.close()
 
     # function to add a new hotel to the database
     def post(self):
-        # generate session
-        Session = sessionmaker(bind = engine)
-        session = Session()
         # check to see if the required arguments are passed
         args = hotel_args.parse_args()
         # store each token into a variable
         hotel_name = request.json["hotel_name"]
         street_address = request.json["street_address"]
         city = request.json["city"]
+        # generate session
+        Session = sessionmaker(bind = engine)
+        session = Session()
         try:
             # check if this hotel already exists in the database
             result = session.query(Hotel).filter((Hotel.hotel_name == hotel_name) & (Hotel.street_address == street_address) & (Hotel.city == city)).first()
@@ -311,7 +310,6 @@ class AllHotels(Resource):
         else:
             # return success message
             return {"message": f"Hotel ID {new_hotel.hotel_id} was successfully added to the database."}
-        # close the session
         finally:
             session.close()
 
@@ -373,7 +371,6 @@ class SingleHotel(Resource):
             
             # return the result
             return result[0]
-        # close the session
         finally:
             session.close()
     
@@ -398,7 +395,6 @@ class SingleHotel(Resource):
         else:
             # return message on success
             return {"message": f"Hotel ID {hotel_id} was successfully deleted."}
-        # close the session
         finally:
             session.close()
     
@@ -423,7 +419,6 @@ class SingleHotel(Resource):
             
             # return the result
             return result[0]
-        # close the session
         finally:
             session.close()
 
@@ -485,8 +480,8 @@ class HotelAvailability(Resource):
             check_in = str(args["check_in"])
             check_out = str(args["check_out"])
         # if the request does not have all three, abort with 400
-        except:
-            abort(400, description = "Must provide for city, check_in, and check_out.")
+        except BadRequestKeyError as e:
+            abort(400, description = "Must provide city, check_in, and check_out.")
         else:
             # generate session
             Session = sessionmaker(bind = engine)
@@ -524,7 +519,6 @@ GROUP BY hotel_id)
                     abort(404, description  = f"There are no hotels in that match that query. (City {city} Check in {check_in} Check out {check_out})")
                 # if there is only one hotel that matches
                 return results
-            # close the session
             finally:
                 session.close()
 
