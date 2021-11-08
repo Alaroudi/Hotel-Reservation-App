@@ -456,13 +456,13 @@ def generate_availability_entry(hotel_availability_results):
         new_entry["Pool"] = result.Pool
         new_entry["Gym"] = result.Gym
         new_entry["Spa"] = result.Spa
-        new_entry["Business Office"] = result[16]
+        new_entry["Business_Office"] = result[16]
         new_entry["Wifi"] = result.Wifi
         new_entry["available_standard_count"] = int(result.available_standard_count)
         new_entry["standard_price"] = float(result.standard_price)
         new_entry["available_queen_count"] = int(result.available_queen_count)
         new_entry["queen_price"] = float(result.queen_price)
-        new_entry["available_king_price"] = int(result.available_king_count)
+        new_entry["available_king_count"] = int(result.available_king_count)
         new_entry["king_price"] = float(result.king_price)
         if new_entry not in result_list:
             result_list.append(new_entry)
