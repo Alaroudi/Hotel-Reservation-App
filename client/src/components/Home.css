@@ -4,8 +4,10 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  /* max-width: 1040px;
-  margin: 0 auto 0 auto; */
+  background-image: url("images/explore.svg");
+  background-repeat: no-repeat;
+  background-position-y: bottom;
+  background-size: contain;
 }
 
 .check-in-out-container {
@@ -13,6 +15,7 @@
   padding: 4rem 3rem;
   border-radius: 15px;
   width: 700px;
+  background: rgb(255 255 255 / 95%);
 }
 
 .check-in-out-form {
