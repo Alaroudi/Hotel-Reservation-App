@@ -525,7 +525,7 @@ GROUP BY hotel_id)
 # add to each class to API
 api.add_resource(SingleHotel, "/api/hotels/<int:hotel_id>")
 api.add_resource(AllHotels, "/api/hotels")
-api.add_resource(HotelAvailability, "/api/hotel-availability/")
+api.add_resource(HotelAvailability, "/api/hotels/availability")
 
 if __name__ == "__main__":
     # load dotenv
