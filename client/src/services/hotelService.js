@@ -6,6 +6,12 @@ export function getHotels() {
   return http.get(apiEndpoint);
 }
 
+export function getHotelAvailability(check_in, check_out, city) {
+  return http.get(
+    `${apiEndpoint}/availability?city=${city}&check_in=${check_in}&check_out=${check_out}`
+  );
+}
+
 export function getHotel(hotel_id) {
   return http.get(`${apiEndpoint}/${hotel_id}`);
 }

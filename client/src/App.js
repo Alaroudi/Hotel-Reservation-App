@@ -12,6 +12,8 @@ import { useEffect, useState } from "react";
 import auth from "./services/authService";
 import HotelsTable from "./components/HotelsTable";
 import HotelForm from "./components/HotelForm";
+import HotelSearch from "./components/HotelSearch";
+import ProtectedRoute from "./components/common/protectedRoute";
 
 const App = () => {
   const [user, setUser] = useState();
@@ -29,11 +31,12 @@ const App = () => {
         <Switch>
           <Route path="/signin" component={SignIn} />
           <Route path="/signup" component={SignUp} />
-          <Route path="/profile" component={Profile} />
+          <ProtectedRoute path="/profile" component={Profile} />
           <Route path="/logout" component={Logout} />
           <Route path="/home" component={Home} />
-          <Route path="/hotels/:id" component={HotelForm} />
-          <Route path="/hotels" component={HotelsTable} />
+          <ProtectedRoute path="/hotels/:id" component={HotelForm} />
+          <ProtectedRoute path="/hotels" component={HotelsTable} />
+          <Route path="/hotel-search" component={HotelSearch} />
           <Route path="/not-found" component={PageNotFound} />
           <Redirect from="/" exact to="/home" />
           <Redirect to="/not-found" />

@@ -38,7 +38,10 @@ const SignIn = ({ location }) => {
     try {
       setLoading(true);
       await auth.login(values.email, values.password);
-      window.location = location.state ? location.state.from.pathname : "/";
+      console.log(`${location.state.from.pathname}${location.state.search}`);
+      window.location = location.state
+        ? `${location.state.from.pathname}${location.state.from.search}`
+        : "/";
     } catch (ex) {
       if (ex.response && ex.response.status === 400) {
         setError(ex.response.data);
