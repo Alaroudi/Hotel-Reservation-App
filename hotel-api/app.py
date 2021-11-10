@@ -448,11 +448,11 @@ def generate_availability_entry(hotel_availability_results):
         # for some reason, the Bussiness Office variable in this query uses a space instead of an underscore like the other queries
         # have to manually index the variable
         # 16 is Bussiness Office
-        new_entry["Pool"] = result.Pool
-        new_entry["Gym"] = result.Gym
-        new_entry["Spa"] = result.Spa
-        new_entry["Business_Office"] = result[16]
-        new_entry["Wifi"] = result.Wifi
+        new_entry["Pool"] = bool(result.Pool)
+        new_entry["Gym"] = bool(result.Gym)
+        new_entry["Spa"] = bool(result.Spa)
+        new_entry["Business_Office"] = bool(result[16])
+        new_entry["Wifi"] = bool( result.Wifi)
         new_entry["available_standard_count"] = int(result.available_standard_count)
         new_entry["standard_price"] = float(result.standard_price)
         new_entry["available_queen_count"] = int(result.available_queen_count)
