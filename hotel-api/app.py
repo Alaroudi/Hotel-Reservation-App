@@ -505,7 +505,8 @@ JOIN hotel ON reservations.hotel_id = hotel.hotel_id
 where reservations.check_out > \"{check_in}\" and  reservations.check_in < \"{check_out}\"
 GROUP BY hotel_id) 
  AS res) 
- as ava  on hotel.hotel_id = ava.hotel_id where hotel.city = \"{city}\";'''
+ as ava  on hotel.hotel_id = ava.hotel_id where hotel.city = \"{city}\"
+ order by hotel.standard_price;'''
             try:
                 query_results = session.execute(query_text)
             except sq.exc.DBAPIError as e:
