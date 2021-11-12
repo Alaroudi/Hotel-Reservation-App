@@ -23,6 +23,7 @@
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
   width: 100%;
+  padding: 1rem;
 }
 .check-in-out-btn {
   border-radius: 20px !important;
@@ -62,6 +63,9 @@
   .check-in-out-form,
   .hotel-search-form {
     grid-template-columns: 1fr;
+  }
+  .check-in-out-form {
+    padding: 0;
   }
   .check-in-out-container {
     width: 100%;

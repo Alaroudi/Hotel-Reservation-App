@@ -30,7 +30,6 @@ const SignIn = ({ location }) => {
     setValues({ ...values, [event.target.id]: event.target.value });
   };
 
-  // TODO: Call User API
   const handleSubmit = async event => {
     event.preventDefault();
     setLoading(false);
@@ -38,7 +37,6 @@ const SignIn = ({ location }) => {
     try {
       setLoading(true);
       await auth.login(values.email, values.password);
-      console.log(`${location.state.from.pathname}${location.state.search}`);
       window.location = location.state
         ? `${location.state.from.pathname}${location.state.from.search}`
         : "/";
