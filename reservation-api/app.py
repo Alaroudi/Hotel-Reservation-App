@@ -55,14 +55,13 @@ def generate_model(host, user, password, database, outfile=None):
 
 # function to set a valid json for user object
 # returns a list of dictionaries depending on the user query
-# outputs each user and reservation in this format:
 def generate_user_entry(user_results):
 
     # set up list to return
     result_list = []
     prev_user = None
     postion = -1
-
+    
     for cur_user, cur_res, cur_hotel in user_results:
         
         # skips the users that are already done but adds the reservation
@@ -207,10 +206,35 @@ def generate_user_reservations_entry(result):
     # return results
     return result_list
 
+# function to set a valid json for user object
+# returns a user dictionary including the user info reservation info and hotel info
+def generate_single_reservation_entry(user, res, hotel):
+
+    # set up dictionary to be added to result list
+    entry = {}
+    
+    # enter each respective variable into the dictionary
+    entry["user_id"] = user.user_id
+    entry["first_name"] = user.first_name
+    entry["last_name"] = user.last_name
+    entry["email"] = user.email
+    entry["password"] = user.password
+    entry["isAdmin"] = user.isAdmin
+    entry["phone_number"] = user.phone_number
+    entry["date_of_birth"] = str(user.date_of_birth)
+
+    # set up reservations
+    reservation_info = []
+    result = generate_reservation_entry(res, hotel)
+    reservation_info.append(result)
+    
+    entry["reservations"] = reservation_info
+    
+    # return results
+    return entry
+
 ## ---------- Admin ---------- ##
 # class for interacting with all Reservations in the database
-
-
 class AllReservations(Resource):
 
     # function to get all hotels from the database
@@ -399,26 +423,24 @@ class SingleBooking(Resource):
         Session = sessionmaker(bind = engine)
         session = Session()
         
-        try:
-            result = session.query(Reservation).get(reservation_id)
+        try:     
 
-            if not result:
-                abort(
-                    404,
-                    description=
-                    f"Reservation ID {reservation_id} does not exist in the database."
-                )
-
-            hotel, res = session.query(Hotel, Reservation).filter(Hotel.hotel_id == Reservation.hotel_id).filter(Reservation.reservation_id == reservation_id).first()
+            query_result = session.query(User, Reservation, Hotel).filter(User.user_id == Reservation.user_id).filter(Reservation.hotel_id == Hotel.hotel_id).filter(Reservation.reservation_id == reservation_id).first()
                 
         except sq.exc.DBAPIError as e:
             session.rollback()
             return e
 
         else:
+            if query_result is None:
+                abort(
+                    404,
+                    description=
+                    f"Reservation ID {reservation_id} does not exist in the database."
+                )
 
             # generate a dict from res
-            result = generate_reservation_entry(res, hotel)
+            result = generate_single_reservation_entry(query_result[0], query_result[1], query_result[2] )
             
         # return the result
             return result
