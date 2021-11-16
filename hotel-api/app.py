@@ -41,7 +41,7 @@ api = Api(app)
 CORS(app)
 
 # function to generate model
-def generate_model(host, user, password, database, outfile = None):
+def generate_model(host, user, password, database):
     global engine
     
     # set up mysql engine
@@ -49,11 +49,11 @@ def generate_model(host, user, password, database, outfile = None):
         engine = sq.create_engine(f"mysql+pymysql://{user}:{password}@{host}/{database}")
         metadata = sq.MetaData(bind = engine)
         metadata.reflect()
-        # set up output file for database classes
-        outfile = io.open(outfile, "w", encoding = "utf-8") if outfile else sys.stdout
-        # generate code and output to outfile
-        generator = CodeGenerator(metadata)
-        generator.render(outfile)
+        ## set up output file for database classes
+        # outfile = io.open(outfile, "w", encoding = "utf-8") if outfile else sys.stdout
+        ## generate code and output to outfile
+        # generator = CodeGenerator(metadata)
+        # generator.render(outfile)
     except sq.exc.DBAPIError as e:
         abort(500, description = "The database is offline.")
 
@@ -537,5 +537,5 @@ if __name__ == "__main__":
     password = os.getenv("password")
     database = os.getenv("database")
     # generate model and output to database.py
-    generate_model(host, username, password, database, "database.py")
+    generate_model(host, username, password, database)
     app.run(debug = True)
