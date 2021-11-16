@@ -1,5 +1,5 @@
-from sqlalchemy.sql.sqltypes import Boolean
 from database import *
+from sqlalchemy.sql.sqltypes import Boolean
 from flask import Flask, request, abort, jsonify
 from flask_cors import CORS
 from flask_restful import Api, Resource, reqparse
@@ -32,9 +32,6 @@ hotel_args.add_argument("queen_price", type = float, help = "Enter price of quee
 hotel_args.add_argument("king_count", type = int, help = "Enter number of king rooms. (int)", required = True)
 hotel_args.add_argument("king_price", type = float, help = "Enter price of king rooms. (float)", required = True)
 
-# global variable to set up session
-engine = None
-
 # load Flask and API
 app = Flask(__name__)
 api = Api(app)
@@ -42,20 +39,20 @@ CORS(app)
 
 # function to generate model
 def generate_model(host, user, password, database):
-    global engine
     
     # set up mysql engine
     try:
         engine = sq.create_engine(f"mysql+pymysql://{user}:{password}@{host}/{database}")
         metadata = sq.MetaData(bind = engine)
         metadata.reflect()
-        ## set up output file for database classes
+        # set up output file for database classes
         # outfile = io.open(outfile, "w", encoding = "utf-8") if outfile else sys.stdout
-        ## generate code and output to outfile
+        # generate code and output to outfile
         # generator = CodeGenerator(metadata)
         # generator.render(outfile)
     except sq.exc.DBAPIError as e:
         abort(500, description = "The database is offline.")
+    return engine
 
 ## function to set up amenities list
 # returns a list of amenities that the hotel has
@@ -221,6 +218,13 @@ class AllHotels(Resource):
     
     # function to get all hotels from the database
     def get(self):
+        # get username, password, host, and database
+        host = os.environ.get("host")
+        username = os.environ.get("user")
+        password = os.environ.get("password")
+        database = os.environ.get("database")
+        # generate model and output to database.py
+        engine = generate_model(host, username, password, database)
         # generate session
         Session = sessionmaker(bind = engine)
         session = Session()
@@ -245,6 +249,13 @@ class AllHotels(Resource):
 
     # function to add a new hotel to the database
     def post(self):
+        # get username, password, host, and database
+        host = os.environ.get("host")
+        username = os.environ.get("user")
+        password = os.environ.get("password")
+        database = os.environ.get("database")
+        # generate model and output to database.py
+        engine = generate_model(host, username, password, database)
         # check to see if the required arguments are passed
         args = hotel_args.parse_args()
         # store each token into a variable
@@ -318,6 +329,13 @@ class SingleHotel(Resource):
 
     # function to update information for a single hotel from the database by ID number
     def put(self, hotel_id):
+        # get username, password, host, and database
+        host = os.environ.get("host")
+        username = os.environ.get("user")
+        password = os.environ.get("password")
+        database = os.environ.get("database")
+        # generate model and output to database.py
+        engine = generate_model(host, username, password, database)
         # generate session
         Session = sessionmaker(bind = engine)
         session = Session()
@@ -376,6 +394,13 @@ class SingleHotel(Resource):
     
     # function to delete a single hotel from the database by ID number
     def delete(self, hotel_id):
+        # get username, password, host, and database
+        host = os.environ.get("host")
+        username = os.environ.get("user")
+        password = os.environ.get("password")
+        database = os.environ.get("database")
+        # generate model and output to database.py
+        engine = generate_model(host, username, password, database)
         # generate session
         Session = sessionmaker(bind = engine)
         session = Session()
@@ -400,6 +425,13 @@ class SingleHotel(Resource):
     
     # function to get a single hotel from the database by ID number
     def get(self, hotel_id):
+        # get username, password, host, and database
+        host = os.environ.get("host")
+        username = os.environ.get("user")
+        password = os.environ.get("password")
+        database = os.environ.get("database")
+        # generate model and output to database.py
+        engine = generate_model(host, username, password, database)
         # generate session
         Session = sessionmaker(bind = engine)
         session = Session()
@@ -483,6 +515,13 @@ class HotelAvailability(Resource):
         except BadRequestKeyError as e:
             abort(400, description = "Must provide city, check_in, and check_out.")
         else:
+            # get username, password, host, and database
+            host = os.environ.get("host")
+            username = os.environ.get("user")
+            password = os.environ.get("password")
+            database = os.environ.get("database")
+            # generate model and output to database.py
+            engine = generate_model(host, username, password, database)
             # generate session
             Session = sessionmaker(bind = engine)
             session = Session()
@@ -526,16 +565,7 @@ GROUP BY hotel_id)
 # add to each class to API
 api.add_resource(SingleHotel, "/api/hotels/<int:hotel_id>")
 api.add_resource(AllHotels, "/api/hotels")
-api.add_resource(HotelAvailability, "/api/hotels/availability")
+api.add_resource(HotelAvailability, "/api/hotels/availability/")
 
 if __name__ == "__main__":
-    # load dotenv
-    dotenv.load_dotenv()
-    # get username, password, host, and database
-    host = os.getenv("host")
-    username = os.getenv("user")
-    password = os.getenv("password")
-    database = os.getenv("database")
-    # generate model and output to database.py
-    generate_model(host, username, password, database)
-    app.run(debug = True)
+    app.run()
