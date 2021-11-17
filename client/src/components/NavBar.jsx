@@ -46,7 +46,7 @@ const NavBar = ({ user }) => {
             </li>
             <li
               className="nav__item"
-              onClick={() => history.push("/reservations")}
+              onClick={() => history.push("/my-reservations")}
             >
               My Reservations
             </li>

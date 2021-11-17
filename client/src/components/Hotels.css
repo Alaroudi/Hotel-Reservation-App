@@ -2,6 +2,10 @@
   padding: 1rem 2rem;
 }
 
+.myreservation-container {
+  padding: 1rem 2rem;
+}
+
 tbody tr:hover {
   background-color: #e0e0e0 !important;
   transform: scale(1.015) !important;
@@ -186,6 +190,36 @@ table {
   font-weight: 500;
   margin-top: 0.5rem;
 }
+
+.reservation-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  font-weight: 100;
+  color: rgb(99 106 112);
+  align-items: center;
+}
+.reservation-reserved-rooms {
+  display: flex;
+  gap: 3rem;
+}
+.reservation-flex {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  grid-column: span 3;
+}
+
+.flex {
+  display: flex;
+}
+.modify-btns {
+  order: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 @media screen and (max-width: 700px) {
   .hotel-grid {
     grid-template-columns: repeat(1, 1fr);
@@ -216,11 +250,31 @@ table {
     top: 0;
     height: auto;
   }
-  .confirmation-container {
+  .confirmation-container,
+  .reservation-container {
     grid-template-columns: 1fr;
   }
   .confirmation-reserved-rooms {
     flex-direction: column;
     gap: 0;
+  }
+  .am {
+    flex-direction: row !important;
+  }
+
+  .reservation-reserved-rooms {
+    gap: 1rem;
+  }
+  .reservation-flex {
+    grid-column: auto;
+  }
+  .myreservation-container {
+    padding: 0;
+  }
+  .flex {
+    flex-direction: column;
+  }
+  .modify-btns {
+    margin-top: 1rem;
   }
 }

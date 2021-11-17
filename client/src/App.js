@@ -14,6 +14,7 @@ import HotelsTable from "./components/HotelsTable";
 import HotelForm from "./components/HotelForm";
 import HotelSearch from "./components/HotelSearch";
 import ProtectedRoute from "./components/common/protectedRoute";
+import MyReservations from "./components/MyReservations";
 
 const App = () => {
   const [user, setUser] = useState();
@@ -37,6 +38,7 @@ const App = () => {
           <ProtectedRoute path="/hotels/:id" component={HotelForm} />
           <ProtectedRoute path="/hotels" component={HotelsTable} />
           <Route path="/hotel-search" component={HotelSearch} />
+          <ProtectedRoute path="/my-reservations" component={MyReservations} />
           <Route path="/not-found" component={PageNotFound} />
           <Redirect from="/" exact to="/home" />
           <Redirect to="/not-found" />

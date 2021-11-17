@@ -17,7 +17,8 @@ import FormControl from "@mui/material/FormControl";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormGroup from "@mui/material/FormGroup";
 import Button from "@mui/material/Button";
-
+import { getCurrentUser } from "../services/authService";
+const user = getCurrentUser();
 const HotelForm = ({ match, history }) => {
   const [hotel, setHotel] = useState({
     hotel_name: "",
@@ -159,7 +160,7 @@ const HotelForm = ({ match, history }) => {
             Hotel Info Saved!
           </Alert>
         )}
-        {showEdit && (
+        {showEdit && user.isAdmin && (
           <Button
             color="secondary"
             className="edit-btn"
@@ -319,90 +320,99 @@ const HotelForm = ({ match, history }) => {
             />
           </FormGroup>
         </FormControl>
+        {user.isAdmin && (
+          <>
+            <FormLabel className="grid-span" disabled={disapled}>
+              Rooms Information
+            </FormLabel>
 
-        <FormLabel className="grid-span" disabled={disapled}>
-          Rooms Information
-        </FormLabel>
+            <TextField
+              variant="outlined"
+              label="Standard Room Count"
+              disabled={disapled}
+              type="number"
+              id="standard_count"
+              defaultValue={hotel.standard_count}
+              onChange={handleChange}
+              required
+            />
+            <TextField
+              variant="outlined"
+              label="Standard Room Price"
+              disabled={disapled}
+              type="number"
+              id="standard_price"
+              defaultValue={hotel.standard_price}
+              onChange={handleChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">$</InputAdornment>
+                )
+              }}
+              required
+            />
+            <TextField
+              variant="outlined"
+              label="Queen Room Count"
+              disabled={disapled}
+              type="number"
+              id="queen_count"
+              defaultValue={hotel.queen_count}
+              onChange={handleChange}
+            />
+            <TextField
+              variant="outlined"
+              label="Queen Room Price"
+              disabled={disapled}
+              type="number"
+              id="queen_price"
+              defaultValue={hotel.queen_price}
+              onChange={handleChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">$</InputAdornment>
+                )
+              }}
+            />
+            <TextField
+              variant="outlined"
+              label="King Room Count"
+              disabled={disapled}
+              type="number"
+              id="king_count"
+              defaultValue={hotel.king_count}
+              onChange={handleChange}
+            />
+            <TextField
+              variant="outlined"
+              label="King Room Price"
+              disabled={disapled}
+              type="number"
+              id="king_price"
+              defaultValue={hotel.king_price}
+              onChange={handleChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">$</InputAdornment>
+                )
+              }}
+            />
 
-        <TextField
-          variant="outlined"
-          label="Standard Room Count"
-          disabled={disapled}
-          type="number"
-          id="standard_count"
-          defaultValue={hotel.standard_count}
-          onChange={handleChange}
-          required
-        />
-        <TextField
-          variant="outlined"
-          label="Standard Room Price"
-          disabled={disapled}
-          type="number"
-          id="standard_price"
-          defaultValue={hotel.standard_price}
-          onChange={handleChange}
-          InputProps={{
-            startAdornment: <InputAdornment position="start">$</InputAdornment>
-          }}
-          required
-        />
-        <TextField
-          variant="outlined"
-          label="Queen Room Count"
-          disabled={disapled}
-          type="number"
-          id="queen_count"
-          defaultValue={hotel.queen_count}
-          onChange={handleChange}
-        />
-        <TextField
-          variant="outlined"
-          label="Queen Room Price"
-          disabled={disapled}
-          type="number"
-          id="queen_price"
-          defaultValue={hotel.queen_price}
-          onChange={handleChange}
-          InputProps={{
-            startAdornment: <InputAdornment position="start">$</InputAdornment>
-          }}
-        />
-        <TextField
-          variant="outlined"
-          label="King Room Count"
-          disabled={disapled}
-          type="number"
-          id="king_count"
-          defaultValue={hotel.king_count}
-          onChange={handleChange}
-        />
-        <TextField
-          variant="outlined"
-          label="King Room Price"
-          disabled={disapled}
-          type="number"
-          id="king_price"
-          defaultValue={hotel.king_price}
-          onChange={handleChange}
-          InputProps={{
-            startAdornment: <InputAdornment position="start">$</InputAdornment>
-          }}
-        />
-
-        <LoadingButton
-          variant="contained"
-          type="submit"
-          size="large"
-          disabled={disapled}
-          loading={buttonLoading}
-          loadingPosition="end"
-          sx={{ borderRadius: "20px", mt: 3 }}
-          className="grid-span"
-          endIcon={<HotelIcon />}
-        >
-          Save
-        </LoadingButton>
+            <LoadingButton
+              variant="contained"
+              type="submit"
+              size="large"
+              disabled={disapled}
+              loading={buttonLoading}
+              loadingPosition="end"
+              sx={{ borderRadius: "20px", mt: 3 }}
+              className="grid-span"
+              endIcon={<HotelIcon />}
+            >
+              Save
+            </LoadingButton>
+          </>
+        )}
       </div>
     </Container>
   );

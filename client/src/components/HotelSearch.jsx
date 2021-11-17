@@ -126,10 +126,22 @@ const HotelSearch = ({ location, history }) => {
   };
 
   const handleConfirmReservation = async () => {
-    console.log(reservation);
     try {
       setLoadingBtn(true);
       await saveReservation(reservation);
+      const revisedHotels = hotels.map(hotel => {
+        if (hotel.hotel_id === reservation.hotel_id) {
+          hotel.available_standard_count =
+            hotel.available_standard_count -
+            reservation.reserved_standard_count;
+          hotel.available_queen_count =
+            hotel.available_queen_count - reservation.reserved_queen_count;
+          hotel.available_king_count =
+            hotel.available_king_count - reservation.reserved_king_count;
+        }
+        return hotel;
+      });
+      setHotels(revisedHotels);
       setSuccess(true);
     } catch (ex) {
       if (ex.response) {
@@ -229,7 +241,7 @@ const HotelSearch = ({ location, history }) => {
             <div>
               <FormControl component="fieldset" variant="standard">
                 <span style={{ margin: "10px 0" }}>Amenities</span>
-                <FormGroup>
+                <FormGroup className="am">
                   <FormControlLabel
                     control={
                       <Checkbox
@@ -423,7 +435,7 @@ const HotelSearch = ({ location, history }) => {
           </DialogContent>
           <DialogActions>
             {success ? (
-              <Button onClick={() => history.push("/reservations")}>
+              <Button onClick={() => history.push("/my-reservations")}>
                 Go To My Reservations
               </Button>
             ) : (
