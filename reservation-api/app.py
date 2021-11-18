@@ -283,6 +283,7 @@ class AllReservations(Resource):
 
         finally:
             session.close()
+            engine.dispose()
 
         
 
@@ -331,6 +332,7 @@ class AllReservations(Resource):
 
         finally:
             session.close()
+            engine.dispose()
 
 
 ## ---------- User ---------- ##
@@ -375,6 +377,7 @@ class UserReservation(Resource):
 
         finally:
             session.close()
+            engine.dispose()
 
     
     
@@ -422,6 +425,7 @@ class SingleBooking(Resource):
             }
         finally:
             session.close()
+            engine.dispose()
 
     def put(self, reservation_id):
         
@@ -436,8 +440,6 @@ class SingleBooking(Resource):
         Session = sessionmaker(bind = engine)
         session = Session()
 
-
-        
         try:
             # finds the reservation based on reservation ID
             result = session.query(Reservation).get(reservation_id)
@@ -464,12 +466,15 @@ class SingleBooking(Resource):
         except sq.exc.DBAPIError as e:
             session.rollback()
             return e
-
-        # return message on success
-        return {
-            "message":
-            f"Reservation ID {reservation_id} was successfully updated."
-        }
+        else:
+            # return message on success
+            return {
+                "message":
+                f"Reservation ID {reservation_id} was successfully updated."
+            }
+        finally:
+            session.close()
+            engine.dispose()
 
     # function to get a specific reservation based on reservation_id from the database
     def get(self, reservation_id):
@@ -510,6 +515,7 @@ class SingleBooking(Resource):
 
         finally:
             session.close()
+            engine.dispose()
 
     
 
