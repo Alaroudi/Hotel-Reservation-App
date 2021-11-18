@@ -22,10 +22,14 @@ reservation_args.add_argument("reserved_standard_count", type = int, help = "Ent
 reservation_args.add_argument("reserved_queen_count", type = int, help = "Enter the number of queen rooms (int)", required = True)
 reservation_args.add_argument("reserved_king_count", type = int, help = "Enter the number of king rooms (int)", required = True)
 
+put_reservation_args = reqparse.RequestParser()
+put_reservation_args.add_argument("check_in", type = str, help = "Enter the check_in of the reservation. (string)", required = True)
+put_reservation_args.add_argument("check_out", type = str, help = "Enter the check_out of the reservation. (string)", required = True)
+put_reservation_args.add_argument("total_price", type = int, help = "Enter the total price of the reservation (decimal number)", required = True)
+put_reservation_args.add_argument("reserved_standard_count", type = int, help = "Enter the number of standard rooms (int)", required = True)
+put_reservation_args.add_argument("reserved_queen_count", type = int, help = "Enter the number of queen rooms (int)", required = True)
+put_reservation_args.add_argument("reserved_king_count", type = int, help = "Enter the number of king rooms (int)", required = True)
 
-
-# global variable to set up session
-engine = None
 
 # load Flask and API
 app = Flask(__name__)
@@ -34,7 +38,6 @@ CORS(app)
 
 
 def generate_model(host, user, password, database, outfile=None):
-    global engine
     try:
         # set up mysql engine
         engine = sq.create_engine(
@@ -42,14 +45,16 @@ def generate_model(host, user, password, database, outfile=None):
         metadata = sq.MetaData(bind=engine)
         metadata.reflect()
         # set up output file for database classes
-        outfile = io.open(outfile, "w",
-                        encoding="utf-8") if outfile else sys.stdout
+        #outfile = io.open(outfile, "w",
+        #                encoding="utf-8") if outfile else sys.stdout
         # generate code and output to outfile
-        generator = CodeGenerator(metadata)
-        generator.render(outfile)
+        #generator = CodeGenerator(metadata)
+        #generator.render(outfile)
 
     except sq.exc.DBAPIError as e:
         return e
+
+    return engine
 
 
 
@@ -211,6 +216,7 @@ def generate_user_reservations_entry(result):
 def generate_single_reservation_entry(user, res, hotel):
 
     # set up dictionary to be added to result list
+    format = {}
     entry = {}
     
     # enter each respective variable into the dictionary
@@ -223,15 +229,21 @@ def generate_single_reservation_entry(user, res, hotel):
     entry["phone_number"] = user.phone_number
     entry["date_of_birth"] = str(user.date_of_birth)
 
+    format["user_information"] = entry
+    
     # set up reservations
-    reservation_info = []
-    result = generate_reservation_entry(res, hotel)
-    reservation_info.append(result)
-    
-    entry["reservations"] = reservation_info
-    
+    format["reservation_id"] = res.reservation_id
+    format["check_in"] = str(res.check_in)
+    format["check_out"] = str(res.check_out)
+    format["total_price"] = float(res.total_price)
+    format["reserved_standard_count"] = res.reserved_standard_count
+    format["reserved_queen_count"] = res.reserved_queen_count
+    format["reserved_king_count"] = res.reserved_king_count
+
+    format["hotel_information"] = generate_hotel_entry(hotel)
+
     # return results
-    return entry
+    return format
 
 ## ---------- Admin ---------- ##
 # class for interacting with all Reservations in the database
@@ -240,12 +252,20 @@ class AllReservations(Resource):
     # function to get all hotels from the database
     def get(self):
 
+        # get username, password, host, and database
+        host = os.environ.get("host")
+        username = os.environ.get("user")
+        password = os.environ.get("password")
+        database = os.environ.get("database")
+
+        engine = generate_model(host, username, password, database)
+
         Session = sessionmaker(bind = engine)
         session = Session()
 
         # query to get all hotels
         try:
-            all_users = session.query(User, Reservation, Hotel).filter(User.user_id == Reservation.user_id).filter(Reservation.hotel_id == Hotel.hotel_id).order_by(User.user_id).all()
+            all_users = session.query(User, Reservation, Hotel).filter(User.user_id == Reservation.user_id).filter(Reservation.hotel_id == Hotel.hotel_id).order_by(User.user_id).order_by(Reservation.check_in).all()
         
         except sq.exc.DBAPIError as e:
             session.rollback()
@@ -268,8 +288,17 @@ class AllReservations(Resource):
 
     def post(self):
 
+        # get username, password, host, and database
+        host = os.environ.get("host")
+        username = os.environ.get("user")
+        password = os.environ.get("password")
+        database = os.environ.get("database")
+
+        engine = generate_model(host, username, password, database)
+
         Session = sessionmaker(bind = engine)
         session = Session()
+
 
         try:
             #checks to see if there are the proper arguments
@@ -312,11 +341,20 @@ class UserReservation(Resource):
     # function to get a user reservations based on user_id from the database
     def get(self, user_id):
 
+        # get username, password, host, and database
+        host = os.environ.get("host")
+        username = os.environ.get("user")
+        password = os.environ.get("password")
+        database = os.environ.get("database")
+
+        engine = generate_model(host, username, password, database)
+
         Session = sessionmaker(bind = engine)
         session = Session()
 
+
         try:
-            query_result = session.query(Hotel, Reservation).filter(Hotel.hotel_id == Reservation.hotel_id).filter(Reservation.user_id == user_id).all()
+            query_result = session.query(Hotel, Reservation).filter(Hotel.hotel_id == Reservation.hotel_id).filter(Reservation.user_id == user_id).order_by(Reservation.check_in).all()
 
         except sq.exc.DBAPIError as e:
             session.rollback()
@@ -346,8 +384,17 @@ class SingleBooking(Resource):
     # function to delete a single reservation from the database by ID number
     def delete(self, reservation_id):
 
+        # get username, password, host, and database
+        host = os.environ.get("host")
+        username = os.environ.get("user")
+        password = os.environ.get("password")
+        database = os.environ.get("database")
+
+        engine = generate_model(host, username, password, database)
+
         Session = sessionmaker(bind = engine)
         session = Session()
+
         
         try:
             result = session.query(Reservation).get(reservation_id)
@@ -378,8 +425,17 @@ class SingleBooking(Resource):
 
     def put(self, reservation_id):
         
+        # get username, password, host, and database
+        host = os.environ.get("host")
+        username = os.environ.get("user")
+        password = os.environ.get("password")
+        database = os.environ.get("database")
+
+        engine = generate_model(host, username, password, database)
+
         Session = sessionmaker(bind = engine)
         session = Session()
+
 
         
         try:
@@ -393,10 +449,8 @@ class SingleBooking(Resource):
                     f"Reservation ID {reservation_id} does not exist in the database."
                 )
             # checks to see if the necessary argument have been passed 
-            args = reservation_args.parse_args()
+            args = put_reservation_args.parse_args()
 
-            result.user_id = request.json["user_id"]
-            result.hotel_id = request.json["hotel_id"]
             result.check_in = request.json["check_in"]
             result.check_out = request.json["check_out"]
             result.total_price = request.json["total_price"]
@@ -420,8 +474,17 @@ class SingleBooking(Resource):
     # function to get a specific reservation based on reservation_id from the database
     def get(self, reservation_id):
 
+        # get username, password, host, and database
+        host = os.environ.get("host")
+        username = os.environ.get("user")
+        password = os.environ.get("password")
+        database = os.environ.get("database")
+
+        engine = generate_model(host, username, password, database)
+
         Session = sessionmaker(bind = engine)
         session = Session()
+
         
         try:     
 
@@ -453,16 +516,7 @@ class SingleBooking(Resource):
 # add to each class to API
 api.add_resource(UserReservation, "/api/user/<int:user_id>")
 api.add_resource(AllReservations, "/api/user")
-api.add_resource(SingleBooking, "/api/bookings/<int:reservation_id>")
+api.add_resource(SingleBooking, "/api/reservation/<int:reservation_id>")
 
-if __name__ == "__main__":
-    # load dotenv
-    dotenv.load_dotenv()
-    # get username, password, host, and database
-    host = os.getenv("host")
-    username = os.getenv("user")
-    password = os.getenv("password")
-    database = os.getenv("database")
-    # generate model and output to db.py
-    generate_model(host, username, password, database, "database.py")
+if __name__ == "__main__":  
     app.run(debug=True)
