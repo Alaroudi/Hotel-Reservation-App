@@ -246,6 +246,7 @@ class AllHotels(Resource):
             return result
         finally:
             session.close()
+            engine.dispose()
 
     # function to add a new hotel to the database
     def post(self):
@@ -323,6 +324,7 @@ class AllHotels(Resource):
             return {"message": f"Hotel ID {new_hotel.hotel_id} was successfully added to the database."}
         finally:
             session.close()
+            engine.dispose()
 
 # class for interacting with one hotel in the database
 class SingleHotel(Resource):
@@ -391,6 +393,7 @@ class SingleHotel(Resource):
             return result[0]
         finally:
             session.close()
+            engine.dispose()
     
     # function to delete a single hotel from the database by ID number
     def delete(self, hotel_id):
@@ -422,6 +425,7 @@ class SingleHotel(Resource):
             return {"message": f"Hotel ID {hotel_id} was successfully deleted."}
         finally:
             session.close()
+            engine.dispose()
     
     # function to get a single hotel from the database by ID number
     def get(self, hotel_id):
@@ -453,6 +457,7 @@ class SingleHotel(Resource):
             return result[0]
         finally:
             session.close()
+            engine.dispose()
 
 # hotel_reservation_results = session.query(Hotel, Reservation)....
 ## function to generate a valid json object for a hotel entry
@@ -561,6 +566,7 @@ GROUP BY hotel_id)
                 return results
             finally:
                 session.close()
+                engine.dispose()
 
 # add to each class to API
 api.add_resource(SingleHotel, "/api/hotels/<int:hotel_id>")
