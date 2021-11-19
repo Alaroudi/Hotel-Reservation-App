@@ -89,7 +89,7 @@ CREATE TABLE `hotel` (
   `hotel_name` varchar(50) NOT NULL,
   `street_address` varchar(50) NOT NULL,
   `city` char(25) NOT NULL,
-  `state` char(2) NOT NULL,
+  `state` char(15) NOT NULL,
   `zipcode` int NOT NULL,
   `phone_number` char(15) NOT NULL,
   `standard_count` int default 0,
