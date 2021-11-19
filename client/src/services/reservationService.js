@@ -14,5 +14,5 @@ export function getReservation(user_id) {
   return http.get(`${apiEndpoint}/user/${user_id}`);
 }
 export function DeleteReservation(reservation_id) {
-  return http.delete(`${apiEndpoint}/bookings/${reservation_id}`);
+  return http.delete(`${apiEndpoint}/reservation/${reservation_id}`);
 }

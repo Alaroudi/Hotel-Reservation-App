@@ -220,6 +220,22 @@ table {
   gap: 0.5rem;
 }
 
+.user-reservation-container {
+  max-width: 1400px;
+  margin: 1rem auto 0 auto;
+}
+
+.user-reservations-grid {
+  flex-grow: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.no-padding {
+  padding: 0;
+}
+
 @media screen and (max-width: 700px) {
   .hotel-grid {
     grid-template-columns: repeat(1, 1fr);
@@ -276,5 +292,9 @@ table {
   }
   .modify-btns {
     margin-top: 1rem;
+  }
+  .user-reservations-grid {
+    padding-right: 0;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
