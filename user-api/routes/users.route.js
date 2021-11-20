@@ -25,6 +25,7 @@ router.post("/", async (req, res) => {
     );
 
     if (user) {
+      transaction.rollback();
       return res.status(400).send("User already registered.");
     }
 
@@ -32,10 +33,10 @@ router.post("/", async (req, res) => {
 
     await newUser.save({ transaction });
     await transaction.commit();
-    res.send(newUser);
+    return res.send(newUser);
   } catch (error) {
     await transaction.rollback();
-    res.status(500).send(error);
+    return res.status(500).send(error);
   }
 });
 
