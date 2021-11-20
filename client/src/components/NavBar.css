@@ -1,0 +1,90 @@
+.nav {
+  background: #212529;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: 0.5rem 1.5rem;
+  align-items: center;
+  color: #d2d0db;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+}
+.brand__name {
+  margin-left: 10px;
+  color: floralwhite;
+}
+.nav__list {
+  width: 100%;
+  margin: 0;
+  text-align: center;
+}
+.list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.nav__item {
+  padding: 1rem 2rem;
+  border-bottom: 1px solid darkgrey;
+  transition: all 0.3s;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.nav__item:last-of-type {
+  border-bottom: none;
+}
+.nav__item {
+  color: #d2d0db;
+}
+
+.nav__item:hover {
+  background: #63686c;
+  color: #fff;
+}
+
+.nav__toggler {
+  transition: box-shadow 0.15s !important;
+  color: white !important;
+}
+
+.collapsible__content {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: all 0.3s;
+}
+
+.nav.collapsible--expanded .nav__toggler {
+  opacity: 1;
+  box-shadow: 0 0 0 3px #666;
+  border-radius: 5px;
+}
+.collapsible--expanded .collapsible__content {
+  max-height: 100vh;
+  opacity: 1;
+}
+
+@media screen and (min-width: 768px) {
+  .brand__name {
+    font-size: 1.2rem;
+  }
+  .nav__toggler {
+    display: none !important;
+  }
+
+  .nav__list {
+    width: auto;
+    display: flex;
+    font-size: 1.2rem;
+    max-height: 100%;
+    opacity: 1;
+  }
+
+  .nav__item {
+    border: 0;
+  }
+}
