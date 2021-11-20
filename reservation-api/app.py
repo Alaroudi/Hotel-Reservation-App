@@ -456,9 +456,9 @@ class SingleBooking(Resource):
             result.check_in = request.json["check_in"]
             result.check_out = request.json["check_out"]
             result.total_price = request.json["total_price"]
-            result.standard = request.json["reserved_standard_count"]
-            result.queen = request.json["reserved_queen_count"]
-            result.king = request.json["reserved_king_count"]
+            result.reserved_standard_count = request.json["reserved_standard_count"]
+            result.reserved_queen_count = request.json["reserved_queen_count"]
+            result.reserved_king_count = request.json["reserved_king_count"]
             
             # update the information in the entry
             session.commit()
