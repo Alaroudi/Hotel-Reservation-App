@@ -3,7 +3,7 @@ import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
 import MuiAccordion from "@mui/material/Accordion";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
-import { getReservations } from "../services/reservationService";
+import { getUsersReservations } from "../services/reservationService";
 import { useState, useEffect } from "react";
 import Loading from "./common/Loading";
 import ReservationsList from "./common/ReservationsList";
@@ -55,7 +55,7 @@ const UserReservations = ({ history }) => {
   useEffect(() => {
     const getAllReservations = async () => {
       try {
-        const reservations = await getReservations();
+        const reservations = await getUsersReservations();
         setUsers(reservations.data);
       } catch (ex) {
         if (ex.response) {
@@ -104,6 +104,7 @@ const UserReservations = ({ history }) => {
 
   return (
     <div>
+      <h1 className="title">Users' Reservations</h1>
       <div className="user-reservation-container">
         {users.length === 0 ? (
           renderErrorMessage()

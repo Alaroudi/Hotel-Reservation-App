@@ -11,6 +11,7 @@ import KingBedIcon from "@mui/icons-material/KingBed";
 import { Link } from "react-router-dom";
 import { DeleteReservation } from "../../services/reservationService";
 import { useState } from "react";
+import { formatDateToRegular } from "../utils/formatDate";
 
 const ReservationsList = ({
   userReservations,
@@ -103,11 +104,7 @@ const ReservationsList = ({
                 <TodayIcon color="info" />
                 <span>
                   Check-in:
-                  <b>
-                    {` ${new Date(reservation.check_in).toLocaleDateString(
-                      "en-US"
-                    )}`}
-                  </b>
+                  <b>{` ${formatDateToRegular(reservation.check_in)}`}</b>
                 </span>
               </div>
             </span>
@@ -116,11 +113,7 @@ const ReservationsList = ({
                 <EventIcon color="info" />
                 <span>
                   Check-out:
-                  <b>
-                    {` ${new Date(reservation.check_out).toLocaleDateString(
-                      "en-US"
-                    )}`}
-                  </b>
+                  <b>{` ${formatDateToRegular(reservation.check_out)}`}</b>
                 </span>
               </div>
             </span>

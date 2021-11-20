@@ -2,7 +2,12 @@ import queryString from "query-string";
 import { useState, useEffect } from "react";
 import CheckInOutDates from "./common/CheckInOutDates";
 import * as hotelService from "../services/hotelService";
-import { totalNights, totalWeekends, formatDate } from "./utils/formatDate";
+import {
+  totalNights,
+  totalWeekends,
+  formatDate,
+  formatDateToRegular
+} from "./utils/formatDate";
 import Alert from "@mui/material/Alert";
 import Hotel from "./common/Hotel";
 import Slider from "@mui/material/Slider";
@@ -26,7 +31,7 @@ import FormControl from "@mui/material/FormControl";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormGroup from "@mui/material/FormGroup";
 import LoadingButton from "@mui/lab/LoadingButton";
-import { saveReservation } from "../services/reservationService";
+import { saveUserReservation } from "../services/reservationService";
 
 const minDistance = 10;
 const HotelSearch = ({ location, history }) => {
@@ -128,7 +133,7 @@ const HotelSearch = ({ location, history }) => {
   const handleConfirmReservation = async () => {
     try {
       setLoadingBtn(true);
-      await saveReservation(reservation);
+      await saveUserReservation(reservation);
       const revisedHotels = hotels.map(hotel => {
         if (hotel.hotel_id === reservation.hotel_id) {
           hotel.available_standard_count =
@@ -377,11 +382,7 @@ const HotelSearch = ({ location, history }) => {
                   <TodayIcon color="info" />
                   <span>
                     Check-in:
-                    <b>
-                      {` ${new Date(reservation.check_in).toLocaleDateString(
-                        "en-US"
-                      )}`}
-                    </b>
+                    <b>{` ${formatDateToRegular(reservation.check_in)}`}</b>
                   </span>
                 </div>
               </span>
@@ -391,11 +392,7 @@ const HotelSearch = ({ location, history }) => {
                   <EventIcon color="info" />
                   <span>
                     Check-out:
-                    <b>
-                      {` ${new Date(reservation.check_out).toLocaleDateString(
-                        "en-US"
-                      )}`}
-                    </b>
+                    <b>{` ${formatDateToRegular(reservation.check_out)}`}</b>
                   </span>
                 </div>
               </span>
