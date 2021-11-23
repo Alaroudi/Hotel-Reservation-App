@@ -117,7 +117,7 @@ const ReservationFrom = ({ match, history }) => {
     } catch (ex) {
       if (ex.response) {
         if (ex.response.status === 400) {
-          setPageError(ex.response.data.message);
+          setPageError(JSON.stringify(ex.response.data.message));
         } else {
           setPageError(JSON.stringify(ex.response.data));
         }
