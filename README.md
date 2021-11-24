@@ -15,3 +15,6 @@ Includes the following features:
   * Amenities
   * Room availability
 * Intuitive UI/UX
+
+# Project Design Architecture
+![Project Design](Project-Design.jpg)
